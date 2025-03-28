@@ -1,1 +1,1 @@
-# avito project for IT Purple Hack
+# stack overflow clone 
