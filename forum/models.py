@@ -3,14 +3,15 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.utils.text import slugify
 
 User = settings.AUTH_USER_MODEL
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile", primary_key=True)
     reputation = models.IntegerField(default=0)
     bio = models.TextField(blank=True, null=True)
-    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
+    avatar = models.ImageField(upload_to="static/images/", blank=True, null=True)
 
     def __str__(self):
         return f"Profile of {self.user}"
@@ -23,16 +24,14 @@ class Badge(models.Model):
     def __str__(self):
         return self.name
 
-class UserBadge(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="badges")
+class AwardedBadge(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
     awarded_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        unique_together = ('user', 'badge')
-
-    def __str__(self):
-        return f"{self.badge} awarded to {self.user}"
 
 
 class Notification(models.Model):
@@ -59,14 +58,30 @@ class Question(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="questions")
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    tags = models.ManyToManyField(Tag, related_name="questions")
+    tags = models.ManyToManyField('Tag', related_name="questions")
     views = models.PositiveIntegerField(default=0)
     score = models.IntegerField(default=0)
     is_closed = models.BooleanField(default=False)
+    slug = models.SlugField(max_length=255, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
 
+class Bookmark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookmarks")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="bookmarked_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'question')
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.question.title}"
 
 class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="answers")
