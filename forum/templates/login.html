@@ -1,0 +1,198 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+
+{% block title %}Log In - DevOverflow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 400px;
+        margin: 40px auto;
+        padding: 24px;
+        background-color: #fff;
+        border-radius: 7px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    }
+
+    .auth-container h1 {
+        font-size: 24px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .auth-form .form-group {
+        margin-bottom: 16px;
+    }
+
+    .auth-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .auth-form input[type="text"],
+    .auth-form input[type="email"],
+    .auth-form input[type="password"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #d6d9dc;
+        border-radius: 3px;
+    }
+
+    .auth-form .checkbox-group {
+        display: flex;
+        align-items: center;
+    }
+
+    .auth-form .checkbox-group input {
+        margin-right: 8px;
+    }
+
+    .auth-form .form-actions {
+        margin-top: 24px;
+    }
+
+    .auth-form .btn-full {
+        width: 100%;
+    }
+
+    .auth-links {
+        margin-top: 16px;
+        text-align: center;
+        font-size: 13px;
+    }
+
+    .auth-links a {
+        color: #0077cc;
+    }
+
+    .auth-links a:hover {
+        color: #0095ff;
+    }
+
+    .auth-divider {
+        margin: 24px 0;
+        text-align: center;
+        position: relative;
+    }
+
+    .auth-divider::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: #e4e6e8;
+    }
+
+    .auth-divider span {
+        position: relative;
+        background-color: #fff;
+        padding: 0 10px;
+        color: #6a737c;
+        font-size: 13px;
+    }
+
+    .social-login {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        border-radius: 3px;
+        border: 1px solid #d6d9dc;
+        background-color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .social-btn:hover {
+        background-color: #f8f9f9;
+    }
+
+    .social-btn i {
+        margin-right: 8px;
+    }
+
+    .error-message {
+        color: #d0393e;
+        margin-bottom: 16px;
+        padding: 8px;
+        background-color: #fdf3f4;
+        border-radius: 3px;
+        border-left: 3px solid #d0393e;
+    }
+</style>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>Log in to DevOverflow</h1>
+    
+    {% if form.errors %}
+    <div class="error-message">
+        <p>Your username and password didn't match. Please try again.</p>
+    </div>
+    {% endif %}
+    
+    {% if next %}
+        {% if user.is_authenticated %}
+        <div class="error-message">
+            <p>Your account doesn't have access to this page. To proceed, please login with an account that has access.</p>
+        </div>
+        {% endif %}
+    {% endif %}
+    
+    <div class="social-login">
+        <a href="{% url 'social:begin' 'google-oauth2' %}" class="social-btn">
+            <i class="fab fa-google"></i> Log in with Google
+        </a>
+        <a href="{% url 'social:begin' 'github' %}" class="social-btn">
+            <i class="fab fa-github"></i> Log in with GitHub
+        </a>
+    </div>
+    
+    <div class="auth-divider">
+        <span>or</span>
+    </div>
+    
+    <form method="post" action="{% url 'login' %}" class="auth-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_username">Username or Email</label>
+            <input type="text" name="username" id="id_username" required autofocus>
+        </div>
+        
+        <div class="form-group">
+            <label for="id_password">Password</label>
+            <input type="password" name="password" id="id_password" required>
+        </div>
+        
+        <div class="form-group checkbox-group">
+            <input type="checkbox" name="remember" id="id_remember">
+            <label for="id_remember">Remember me</label>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-full">Log in</button>
+        </div>
+        
+        <input type="hidden" name="next" value="{{ next }}">
+    </form>
+    
+    <div class="auth-links">
+        <p><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
+        <p>Don't have an account? <a href="{% url 'register' %}">Sign up</a></p>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,247 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+
+{% block title %}Sign Up - DevOverflow{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-container {
+        max-width: 400px;
+        margin: 40px auto;
+        padding: 24px;
+        background-color: #fff;
+        border-radius: 7px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    }
+
+    .auth-container h1 {
+        font-size: 24px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .auth-form .form-group {
+        margin-bottom: 16px;
+    }
+
+    .auth-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .auth-form input[type="text"],
+    .auth-form input[type="email"],
+    .auth-form input[type="password"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #d6d9dc;
+        border-radius: 3px;
+    }
+
+    .auth-form .checkbox-group {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .auth-form .checkbox-group input {
+        margin-right: 8px;
+        margin-top: 4px;
+    }
+
+    .auth-form .checkbox-group label {
+        font-weight: normal;
+        font-size: 13px;
+    }
+
+    .auth-form .form-actions {
+        margin-top: 24px;
+    }
+
+    .auth-form .btn-full {
+        width: 100%;
+    }
+
+    .auth-links {
+        margin-top: 16px;
+        text-align: center;
+        font-size: 13px;
+    }
+
+    .auth-links a {
+        color: #0077cc;
+    }
+
+    .auth-links a:hover {
+        color: #0095ff;
+    }
+
+    .auth-divider {
+        margin: 24px 0;
+        text-align: center;
+        position: relative;
+    }
+
+    .auth-divider::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background-color: #e4e6e8;
+    }
+
+    .auth-divider span {
+        position: relative;
+        background-color: #fff;
+        padding: 0 10px;
+        color: #6a737c;
+        font-size: 13px;
+    }
+
+    .social-login {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px;
+        border-radius: 3px;
+        border: 1px solid #d6d9dc;
+        background-color: #fff;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .social-btn:hover {
+        background-color: #f8f9f9;
+    }
+
+    .social-btn i {
+        margin-right: 8px;
+    }
+
+    .error-message {
+        color: #d0393e;
+        margin-bottom: 16px;
+        padding: 8px;
+        background-color: #fdf3f4;
+        border-radius: 3px;
+        border-left: 3px solid #d0393e;
+    }
+
+    .password-hint {
+        font-size: 12px;
+        color: #6a737c;
+        margin-top: 4px;
+    }
+
+    .field-errors {
+        color: #d0393e;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>Sign up for DevOverflow</h1>
+    
+    {% if form.errors %}
+    <div class="error-message">
+        <p>There were errors in your form. Please correct them and try again.</p>
+    </div>
+    {% endif %}
+    
+    <div class="social-login">
+        <a href="{% url 'social:begin' 'google-oauth2' %}" class="social-btn">
+            <i class="fab fa-google"></i> Sign up with Google
+        </a>
+        <a href="{% url 'social:begin' 'github' %}" class="social-btn">
+            <i class="fab fa-github"></i> Sign up with GitHub
+        </a>
+    </div>
+    
+    <div class="auth-divider">
+        <span>or</span>
+    </div>
+    
+    <form method="post" action="{% url 'register' %}" class="auth-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="id_username">Username</label>
+            <input type="text" name="username" id="id_username" required autofocus>
+            {% if form.username.errors %}
+            <div class="field-errors">
+                {% for error in form.username.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_email">Email</label>
+            <input type="email" name="email" id="id_email" required>
+            {% if form.email.errors %}
+            <div class="field-errors">
+                {% for error in form.email.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_password1">Password</label>
+            <input type="password" name="password1" id="id_password1" required>
+            <p class="password-hint">Passwords must contain at least eight characters, including at least 1 letter and 1 number.</p>
+            {% if form.password1.errors %}
+            <div class="field-errors">
+                {% for error in form.password1.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_password2">Confirm Password</label>
+            <input type="password" name="password2" id="id_password2" required>
+            {% if form.password2.errors %}
+            <div class="field-errors">
+                {% for error in form.password2.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group checkbox-group">
+            <input type="checkbox" name="terms" id="id_terms" required>
+            <label for="id_terms">I agree to the <a href="{% url 'forum:terms' %}" target="_blank">Terms of Service</a> and <a href="{% url 'forum:privacy' %}" target="_blank">Privacy Policy</a>.</label>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-full">Sign up</button>
+        </div>
+        
+        <input type="hidden" name="next" value="{{ next }}">
+    </form>
+    
+    <div class="auth-links">
+        <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+    </div>
+</div>
+{% endblock %}
+

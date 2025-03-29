@@ -1,0 +1,32 @@
+{% if page_obj.has_other_pages %}
+<div class="pagination">
+    {% if page_obj.has_previous %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page={{ page_obj.previous_page_number }}" class="pagination-btn prev-btn">Prev</a>
+    {% endif %}
+    
+    {% if page_obj.number|add:'-2' > 1 %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page=1" class="pagination-btn">1</a>
+        {% if page_obj.number|add:'-2' > 2 %}
+            <span class="pagination-ellipsis">...</span>
+        {% endif %}
+    {% endif %}
+    
+    {% for i in page_obj.paginator.page_range %}
+        {% if i >= page_obj.number|add:'-2' and i <= page_obj.number|add:'2' %}
+            <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page={{ i }}" class="pagination-btn {% if i == page_obj.number %}active{% endif %}">{{ i }}</a>
+        {% endif %}
+    {% endfor %}
+    
+    {% if page_obj.number|add:'2' < page_obj.paginator.num_pages %}
+        {% if page_obj.number|add:'2' < page_obj.paginator.num_pages|add:'-1' %}
+            <span class="pagination-ellipsis">...</span>
+        {% endif %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="pagination-btn">{{ page_obj.paginator.num_pages }}</a>
+    {% endif %}
+    
+    {% if page_obj.has_next %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page={{ page_obj.next_page_number }}" class="pagination-btn next-btn">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+

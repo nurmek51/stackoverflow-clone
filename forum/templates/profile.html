@@ -1,0 +1,228 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }} - DevOverflow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile-styles.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-avatar">
+        {% if profile_user.profile.avatar %}
+            <img src="{{ profile_user.profile.avatar.url }}" alt="{{ profile_user.username }}">
+        {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" alt="{{ profile_user.username }}">
+        {% endif %}
+    </div>
+    <div class="profile-info">
+        <h1>{{ profile_user.username }}</h1>
+        <div class="profile-stats">
+            <div class="stat">
+                <div class="stat-number">{{ profile_user.profile.reputation }}</div>
+                <div class="stat-label">reputation</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">{{ questions_count }}</div>
+                <div class="stat-label">questions</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">{{ answers_count }}</div>
+                <div class="stat-label">answers</div>
+            </div>
+        </div>
+        <div class="profile-meta">
+            <div class="meta-item">
+                <i class="fas fa-calendar"></i> Member since {{ profile_user.date_joined|date:"M j, Y" }}
+            </div>
+            {% if profile_user.profile.location %}
+            <div class="meta-item">
+                <i class="fas fa-map-marker-alt"></i> {{ profile_user.profile.location }}
+            </div>
+            {% endif %}
+            {% if profile_user.profile.website %}
+            <div class="meta-item">
+                <i class="fas fa-link"></i> <a href="{{ profile_user.profile.website }}" target="_blank" rel="noopener noreferrer">{{ profile_user.profile.website }}</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% if user == profile_user %}
+    <div class="profile-actions">
+        <a href="{% url 'forum:edit_profile' %}" class="btn btn-outline">Edit Profile</a>
+    </div>
+    {% endif %}
+</div>
+
+{% if profile_user.profile.bio %}
+<div class="profile-bio">
+    <h2>About</h2>
+    <div class="bio-content">
+        {{ profile_user.profile.bio|linebreaks }}
+    </div>
+</div>
+{% endif %}
+
+<div class="profile-tabs">
+    <div class="tabs-header">
+        <a href="?tab=questions" class="tab {% if tab == 'questions' or not tab %}active{% endif %}">Questions</a>
+        <a href="?tab=answers" class="tab {% if tab == 'answers' %}active{% endif %}">Answers</a>
+        <a href="?tab=bookmarks" class="tab {% if tab == 'bookmarks' %}active{% endif %}">Bookmarks</a>
+        <a href="?tab=tags" class="tab {% if tab == 'tags' %}active{% endif %}">Tags</a>
+    </div>
+    
+    <div class="tabs-content">
+        {% if tab == 'questions' or not tab %}
+            <div class="tab-pane active">
+                <h2>Questions</h2>
+                {% if questions %}
+                    <div class="questions-list">
+                        {% for question in questions %}
+                            <div class="question-item">
+                                <div class="question-stats">
+                                    <div class="stat">
+                                        <div class="stat-number">{{ question.votes.count }}</div>
+                                        <div class="stat-label">votes</div>
+                                    </div>
+                                    <div class="stat {% if question.answers.count > 0 %}has-answers{% endif %}">
+                                        <div class="stat-number">{{ question.answers.count }}</div>
+                                        <div class="stat-label">answers</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-number">{{ question.views }}</div>
+                                        <div class="stat-label">views</div>
+                                    </div>
+                                </div>
+                                <div class="question-content">
+                                    <h3 class="question-title">
+                                        <a href="{% url 'forum:question_detail' question.id question.slug %}">{{ question.title }}</a>
+                                    </h3>
+                                    <div class="question-meta">
+                                        <div class="question-tags">
+                                            {% for tag in question.tags.all %}
+                                                <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="question-date">
+                                            asked {{ question.created_at|timesince }} ago
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% include 'forum/includes/pagination.html' with page_obj=questions %}
+                {% else %}
+                    <div class="no-results">No questions found.</div>
+                {% endif %}
+            </div>
+        {% elif tab == 'answers' %}
+            <div class="tab-pane active">
+                <h2>Answers</h2>
+                {% if answers %}
+                    <div class="answers-list">
+                        {% for answer in answers %}
+                            <div class="answer-item">
+                                <div class="answer-stats">
+                                    <div class="stat">
+                                        <div class="stat-number">{{ answer.votes.count }}</div>
+                                        <div class="stat-label">votes</div>
+                                    </div>
+                                    {% if answer.is_accepted %}
+                                    <div class="stat accepted">
+                                        <div class="stat-icon"><i class="fas fa-check"></i></div>
+                                        <div class="stat-label">accepted</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="answer-content">
+                                    <div class="answer-excerpt">{{ answer.content|striptags|truncatewords:30 }}</div>
+                                    <div class="answer-meta">
+                                        <div class="answer-question">
+                                            <a href="{% url 'forum:question_detail' answer.question.id answer.question.slug %}">{{ answer.question.title }}</a>
+                                        </div>
+                                        <div class="answer-date">
+                                            answered {{ answer.created_at|timesince }} ago
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% include 'forum/includes/pagination.html' with page_obj=answers %}
+                {% else %}
+                    <div class="no-results">No answers found.</div>
+                {% endif %}
+            </div>
+        {% elif tab == 'bookmarks' %}
+            <div class="tab-pane active">
+                <h2>Bookmarks</h2>
+                {% if bookmarks %}
+                    <div class="questions-list">
+                        {% for bookmark in bookmarks %}
+                            <div class="question-item">
+                                <div class="question-stats">
+                                    <div class="stat">
+                                        <div class="stat-number">{{ bookmark.question.votes.count }}</div>
+                                        <div class="stat-label">votes</div>
+                                    </div>
+                                    <div class="stat {% if bookmark.question.answers.count > 0 %}has-answers{% endif %}">
+                                        <div class="stat-number">{{ bookmark.question.answers.count }}</div>
+                                        <div class="stat-label">answers</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-number">{{ bookmark.question.views }}</div>
+                                        <div class="stat-label">views</div>
+                                    </div>
+                                </div>
+                                <div class="question-content">
+                                    <h3 class="question-title">
+                                        <a href="{% url 'forum:question_detail' bookmark.question.id bookmark.question.slug %}">{{ bookmark.question.title }}</a>
+                                    </h3>
+                                    <div class="question-meta">
+                                        <div class="question-tags">
+                                            {% for tag in bookmark.question.tags.all %}
+                                                <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="bookmark-date">
+                                            bookmarked {{ bookmark.created_at|timesince }} ago
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% include 'forum/includes/pagination.html' with page_obj=bookmarks %}
+                {% else %}
+                    <div class="no-results">No bookmarks found.</div>
+                {% endif %}
+            </div>
+        {% elif tab == 'tags' %}
+            <div class="tab-pane active">
+                <h2>Tags</h2>
+                {% if tags %}
+                    <div class="tags-list profile-tags">
+                        {% for tag in tags %}
+                            <div class="profile-tag-item">
+                                <div class="tag-name">
+                                    <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
+                                </div>
+                                <div class="tag-stats">
+                                    <span>{{ tag.count }} posts</span>
+                                    <span>{{ tag.score }} score</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% include 'forum/includes/pagination.html' with page_obj=tags %}
+                {% else %}
+                    <div class="no-results">No tags found.</div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

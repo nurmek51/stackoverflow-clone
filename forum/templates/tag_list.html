@@ -1,0 +1,65 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+
+{% block title %}Tags - DevOverflow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/tags-styles.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Tags</h1>
+    <p class="tags-description">A tag is a keyword or label that categorizes your question with other, similar questions. Using the right tags makes it easier for others to find and answer your question.</p>
+</div>
+
+<div class="tags-filter">
+    <input type="text" id="tag-filter" placeholder="Filter by tag name...">
+</div>
+
+<div class="tags-grid">
+    {% for tag in tags %}
+        <div class="tag-card">
+            <div class="tag-name">
+                <a href="{% url 'forum:tag_detail' tag.slug %}">{{ tag.name }}</a>
+            </div>
+            <div class="tag-description">
+                {{ tag.description|default:"No description available." }}
+            </div>
+            <div class="tag-stats">
+                <span>{{ tag.count }} questions</span>
+                <span>{{ tag.today_count }} asked today</span>
+            </div>
+        </div>
+    {% empty %}
+        <div class="no-results">No tags found.</div>
+    {% endfor %}
+</div>
+
+{% include 'forum/includes/pagination.html' with page_obj=tags %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tagFilter = document.getElementById('tag-filter');
+        const tagCards = document.querySelectorAll('.tag-card');
+        
+        tagFilter.addEventListener('input', function() {
+            const searchTerm = this.value.trim().toLowerCase();
+            
+            tagCards.forEach(card => {
+                const tagName = card.querySelector('.tag-name').textContent.toLowerCase();
+                const tagDescription = card.querySelector('.tag-description').textContent.toLowerCase();
+                
+                if (tagName.includes(searchTerm) || tagDescription.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+

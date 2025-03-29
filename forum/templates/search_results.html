@@ -1,0 +1,205 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+
+{% block title %}Search Results - DevOverflow{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Search Results</h1>
+    <p class="search-query">Results for: <strong>{{ query }}</strong></p>
+</div>
+
+<div class="search-filter">
+    <a href="{% url 'forum:search' %}?q={{ query }}&type=all" class="filter-btn {% if search_type == 'all' or not search_type %}active{% endif %}">All</a>
+    <a href="{% url 'forum:search' %}?q={{ query }}&type=questions" class="filter-btn {% if search_type == 'questions' %}active{% endif %}">Questions</a>
+    <a href="{% url 'forum:search' %}?q={{ query }}&type=answers" class="filter-btn {% if search_type == 'answers' %}active{% endif %}">Answers</a>
+    <a href="{% url 'forum:search' %}?q={{ query }}&type=users" class="filter-btn {% if search_type == 'users' %}active{% endif %}">Users</a>
+    <a href="{% url 'forum:search' %}?q={{ query }}&type=tags" class="filter-btn {% if search_type == 'tags' %}active{% endif %}">Tags</a>
+</div>
+
+{% if search_type == 'all' or search_type == 'questions' or not search_type %}
+    {% if questions %}
+        <div class="search-section">
+            <h2>Questions</h2>
+            <div class="questions-list">
+                {% for question in questions %}
+                    <div class="question-item">
+                        <div class="question-stats">
+                            <div class="stat">
+                                <div class="stat-number">{{ question.votes.count }}</div>
+                                <div class="stat-label">votes</div>
+                            </div>
+                            <div class="stat {% if question.answers.count > 0 %}has-answers{% endif %}">
+                                <div class="stat-number">{{ question.answers.count }}</div>
+                                <div class="stat-label">answers</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">{{ question.views }}</div>
+                                <div class="stat-label">views</div>
+                            </div>
+                        </div>
+                        <div class="question-content">
+                            <h3 class="question-title">
+                                <a href="{% url 'forum:question_detail' question.id question.slug %}">{{ question.title }}</a>
+                            </h3>
+                            <div class="question-excerpt">{{ question.content|striptags|truncatewords:30 }}</div>
+                            <div class="question-meta">
+                                <div class="question-tags">
+                                    {% for tag in question.tags.all %}
+                                        <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
+                                    {% endfor %}
+                                </div>
+                                <div class="question-user">
+                                    {% if question.user.profile.avatar %}
+                                        <img src="{{ question.user.profile.avatar.url }}" alt="{{ question.user.username }}" class="user-avatar">
+                                    {% else %}
+                                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ question.user.username }}" class="user-avatar">
+                                    {% endif %}
+                                    <a href="{% url 'forum:profile' question.user.username %}">{{ question.user.username }}</a>
+                                    <span>asked {{ question.created_at|timesince }} ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if search_type == 'questions' %}
+                {% include 'forum/includes/pagination.html' with page_obj=questions %}
+            {% elif questions_count > 5 %}
+                <div class="view-more">
+                    <a href="{% url 'forum:search' %}?q={{ query }}&type=questions" class="btn btn-outline">View all {{ questions_count }} questions</a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+
+{% if search_type == 'all' or search_type == 'answers' %}
+    {% if answers %}
+        <div class="search-section">
+            <h2>Answers</h2>
+            <div class="answers-list">
+                {% for answer in answers %}
+                    <div class="answer-item">
+                        <div class="answer-stats">
+                            <div class="stat">
+                                <div class="stat-number">{{ answer.votes.count }}</div>
+                                <div class="stat-label">votes</div>
+                            </div>
+                            {% if answer.is_accepted %}
+                            <div class="stat accepted">
+                                <div class="stat-icon"><i class="fas fa-check"></i></div>
+                                <div class="stat-label">accepted</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="answer-content">
+                            <div class="answer-excerpt">{{ answer.content|striptags|truncatewords:30 }}</div>
+                            <div class="answer-meta">
+                                <div class="answer-question">
+                                    <a href="{% url 'forum:question_detail' answer.question.id answer.question.slug %}">{{ answer.question.title }}</a>
+                                </div>
+                                <div class="answer-user">
+                                    {% if answer.user.profile.avatar %}
+                                        <img src="{{ answer.user.profile.avatar.url }}" alt="{{ answer.user.username }}" class="user-avatar">
+                                    {% else %}
+                                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ answer.user.username }}" class="user-avatar">
+                                    {% endif %}
+                                    <a href="{% url 'forum:profile' answer.user.username %}">{{ answer.user.username }}</a>
+                                    <span>answered {{ answer.created_at|timesince }} ago</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if search_type == 'answers' %}
+                {% include 'forum/includes/pagination.html' with page_obj=answers %}
+            {% elif answers_count > 5 %}
+                <div class="view-more">
+                    <a href="{% url 'forum:search' %}?q={{ query }}&type=answers" class="btn btn-outline">View all {{ answers_count }} answers</a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+
+{% if search_type == 'all' or search_type == 'users' %}
+    {% if users %}
+        <div class="search-section">
+            <h2>Users</h2>
+            <div class="users-grid">
+                {% for user_profile in users %}
+                    <div class="user-card">
+                        <div class="user-avatar">
+                            {% if user_profile.profile.avatar %}
+                                <img src="{{ user_profile.profile.avatar.url }}" alt="{{ user_profile.username }}">
+                            {% else %}
+                                <img src="{% static 'images/default-avatar.png' %}" alt="{{ user_profile.username }}">
+                            {% endif %}
+                        </div>
+                        <div class="user-info">
+                            <h3><a href="{% url 'forum:profile' user_profile.username %}">{{ user_profile.username }}</a></h3>
+                            <div class="user-reputation">{{ user_profile.profile.reputation }} reputation</div>
+                            {% if user_profile.profile.location %}
+                                <div class="user-location">{{ user_profile.profile.location }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if search_type == 'users' %}
+                {% include 'forum/includes/pagination.html' with page_obj=users %}
+            {% elif users_count > 6 %}
+                <div class="view-more">
+                    <a href="{% url 'forum:search' %}?q={{ query }}&type=users" class="btn btn-outline">View all {{ users_count }} users</a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+
+{% if search_type == 'all' or search_type == 'tags' %}
+    {% if tags %}
+        <div class="search-section">
+            <h2>Tags</h2>
+            <div class="tags-grid">
+                {% for tag in tags %}
+                    <div class="tag-card">
+                        <div class="tag-name">
+                            <a href="{% url 'forum:tag_detail' tag.slug %}">{{ tag.name }}</a>
+                        </div>
+                        <div class="tag-description">
+                            {{ tag.description|default:"No description available." }}
+                        </div>
+                        <div class="tag-stats">
+                            <span>{{ tag.count }} questions</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% if search_type == 'tags' %}
+                {% include 'forum/includes/pagination.html' with page_obj=tags %}
+            {% elif tags_count > 6 %}
+                <div class="view-more">
+                    <a href="{% url 'forum:search' %}?q={{ query }}&type=tags" class="btn btn-outline">View all {{ tags_count }} tags</a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+
+{% if not questions and not answers and not users and not tags %}
+    <div class="no-results">
+        <h2>No results found</h2>
+        <p>We couldn't find any results for "{{ query }}".</p>
+        <p>Suggestions:</p>
+        <ul>
+            <li>Make sure all words are spelled correctly.</li>
+            <li>Try different keywords.</li>
+            <li>Try more general keywords.</li>
+        </ul>
+    </div>
+{% endif %}
+{% endblock %}
+

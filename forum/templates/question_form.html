@@ -1,0 +1,229 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+
+{% block title %}Ask a Question - DevOverflow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/ask-question-styles.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ask-question-container">
+    <h1>Ask a public question</h1>
+    
+    <div class="question-guidelines">
+        <h2>Writing a good question</h2>
+        <p>You're ready to ask a programming-related question and this form will help guide you through the process.</p>
+        <p>Steps:</p>
+        <ul>
+            <li>Summarize your problem in a one-line title.</li>
+            <li>Describe your problem in more detail.</li>
+            <li>Describe what you tried and what you expected to happen.</li>
+            <li>Add "tags" which help surface your question to members of the community.</li>
+            <li>Review your question and post it to the site.</li>
+        </ul>
+    </div>
+    
+    <form method="post" id="ask-question-form">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="form-errors">
+            {% for error in form.non_field_errors %}
+                <p class="error">{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Title</label>
+            <p class="form-description">Be specific and imagine you're asking a question to another person.</p>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <div class="field-errors">
+                    {% for error in form.title.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.content.id_for_label }}">Body</label>
+            <p class="form-description">Include all the information someone would need to answer your question.</p>
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <button type="button" class="toolbar-btn" title="Bold" data-tag="**"><i class="fas fa-bold"></i></button>
+                    <button type="button" class="toolbar-btn" title="Italic" data-tag="*"><i class="fas fa-italic"></i></button>
+                    <button type="button" class="toolbar-btn" title="Code" data-tag="`"><i class="fas fa-code"></i></button>
+                    <button type="button" class="toolbar-btn" title="Link" data-tag="[](url)"><i class="fas fa-link"></i></button>
+                    <button type="button" class="toolbar-btn" title="Quote" data-tag="> "><i class="fas fa-quote-left"></i></button>
+                    <button type="button" class="toolbar-btn" title="Image" data-tag="![](image-url)"><i class="fas fa-image"></i></button>
+                </div>
+                {{ form.content }}
+            </div>
+            {% if form.content.errors %}
+                <div class="field-errors">
+                    {% for error in form.content.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.tags.id_for_label }}">Tags</label>
+            <p class="form-description">Add up to 5 tags to describe what your question is about.</p>
+            {{ form.tags }}
+            <div class="tags-container" id="tags-container">
+                {% if form.instance.tags.all %}
+                    {% for tag in form.instance.tags.all %}
+                        <div class="tag-item">
+                            {{ tag.name }}
+                            <span class="remove-tag" data-tag="{{ tag.name }}">&times;</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% if form.tags.errors %}
+                <div class="field-errors">
+                    {% for error in form.tags.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Post your question</button>
+            <a href="{% url 'forum:index' %}" class="btn btn-outline" id="discard-btn">Discard</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tagsInput = document.getElementById('{{ form.tags.id_for_label }}');
+        const tagsContainer = document.getElementById('tags-container');
+        const currentTags = [];
+        
+        // Initialize current tags from existing tag items
+        document.querySelectorAll('.tag-item').forEach(item => {
+            const tagName = item.textContent.trim().replace('×', '');
+            currentTags.push(tagName);
+        });
+        
+        // Handle adding tags
+        tagsInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                
+                const tagText = this.value.trim();
+                if (tagText && !currentTags.includes(tagText) && currentTags.length < 5) {
+                    addTag(tagText);
+                    this.value = '';
+                }
+            }
+        });
+        
+        // Add a tag to the UI
+        function addTag(tagText) {
+            currentTags.push(tagText);
+            
+            const tagElement = document.createElement('div');
+            tagElement.className = 'tag-item';
+            tagElement.innerHTML = `
+                ${tagText}
+                <span class="remove-tag" data-tag="${tagText}">&times;</span>
+            `;
+            
+            tagsContainer.appendChild(tagElement);
+            
+            // Add event listener to remove tag
+            tagElement.querySelector('.remove-tag').addEventListener('click', function() {
+                const tag = this.dataset.tag;
+                removeTag(tag);
+            });
+            
+            // Update the hidden input with all tags
+            updateTagsInput();
+        }
+        
+        // Remove a tag from the UI
+        function removeTag(tagText) {
+            const index = currentTags.indexOf(tagText);
+            if (index !== -1) {
+                currentTags.splice(index, 1);
+            }
+            
+            const tagElements = tagsContainer.querySelectorAll('.tag-item');
+            tagElements.forEach(element => {
+                if (element.textContent.trim().replace('×', '') === tagText) {
+                    element.remove();
+                }
+            });
+            
+            // Update the hidden input with all tags
+            updateTagsInput();
+        }
+        
+        // Update the hidden input with all tags
+        function updateTagsInput() {
+            tagsInput.value = currentTags.join(',');
+        }
+        
+        // Add event listeners to existing remove tag buttons
+        document.querySelectorAll('.remove-tag').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tag = this.dataset.tag;
+                removeTag(tag);
+            });
+        });
+        
+        // Editor toolbar functionality
+        document.querySelectorAll('.toolbar-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const editor = document.getElementById('{{ form.content.id_for_label }}');
+                const tag = this.dataset.tag;
+                const selectionStart = editor.selectionStart;
+                const selectionEnd = editor.selectionEnd;
+                const selectedText = editor.value.substring(selectionStart, selectionEnd);
+                
+                let replacement = '';
+                
+                if (tag === '`' && selectedText.includes('\n')) {
+                    // Code block for multi-line selection
+                    replacement = '```\n' + selectedText + '\n```';
+                } else if (tag === '> ') {
+                    // Quote - add to each line
+                    replacement = selectedText.split('\n').map(line => '> ' + line).join('\n');
+                } else if (tag === '[](url)') {
+                    // Link
+                    replacement = '[' + (selectedText || 'link text') + '](url)';
+                } else if (tag === '![](image-url)') {
+                    // Image
+                    replacement = '![' + (selectedText || 'alt text') + '](image-url)';
+                } else {
+                    // Bold, italic, inline code
+                    replacement = tag + selectedText + tag;
+                }
+                
+                editor.focus();
+                document.execCommand('insertText', false, replacement);
+            });
+        });
+        
+        // Confirm before discarding
+        document.getElementById('discard-btn').addEventListener('click', function(e) {
+            if (tagsInput.value || document.getElementById('{{ form.content.id_for_label }}').value || document.getElementById('{{ form.title.id_for_label }}').value) {
+                if (!confirm('Are you sure you want to discard this question? All progress will be lost.')) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,99 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+
+{% block title %}{{ tag.name }} - DevOverflow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/tags-styles.css' %}">
+{% endblock %}
+
+{% block sidebar_content %}
+<div class="sidebar-tags">
+    <h3>Related Tags</h3>
+    <div class="tags-list">
+        {% for related_tag in related_tags %}
+            <a href="{% url 'forum:tag_detail' related_tag.slug %}" class="tag">{{ related_tag.name }} <span class="tag-count">×{{ related_tag.count }}</span></a>
+        {% empty %}
+            <p>No related tags found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="tag-header">
+    <div class="tag tag-large">{{ tag.name }}</div>
+    <div class="tag-info">
+        <div>{{ tag.count }} questions</div>
+        <div>{{ tag.today_count }} asked today</div>
+    </div>
+    <div class="tag-actions">
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'forum:watch_tag' tag.slug %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn {% if is_watching %}btn-primary{% else %}btn-outline{% endif %}" id="watch-tag-btn">
+                    <i class="{% if is_watching %}fas{% else %}far{% endif %} fa-eye"></i> 
+                    {% if is_watching %}Watching{% else %}Watch{% endif %}
+                </button>
+            </form>
+        {% endif %}
+        <a href="{% url 'forum:question_create' %}?tag={{ tag.name }}" class="btn btn-outline" id="ask-question-btn">
+            <i class="fas fa-question"></i> Ask Question
+        </a>
+    </div>
+</div>
+
+<div class="questions-filter">
+    <a href="{% url 'forum:tag_detail' tag.slug %}?sort=newest" class="filter-btn {% if sort == 'newest' or not sort %}active{% endif %}">Newest</a>
+    <a href="{% url 'forum:tag_detail' tag.slug %}?sort=active" class="filter-btn {% if sort == 'active' %}active{% endif %}">Active</a>
+    <a href="{% url 'forum:tag_detail' tag.slug %}?sort=unanswered" class="filter-btn {% if sort == 'unanswered' %}active{% endif %}">Unanswered</a>
+</div>
+
+<div class="questions-list">
+    {% for question in questions %}
+        <div class="question-item">
+            <div class="question-stats">
+                <div class="stat">
+                    <div class="stat-number">{{ question.votes.count }}</div>
+                    <div class="stat-label">votes</div>
+                </div>
+                <div class="stat {% if question.answers.count > 0 %}has-answers{% endif %}">
+                    <div class="stat-number">{{ question.answers.count }}</div>
+                    <div class="stat-label">answers</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ question.views }}</div>
+                    <div class="stat-label">views</div>
+                </div>
+            </div>
+            <div class="question-content">
+                <h3 class="question-title">
+                    <a href="{% url 'forum:question_detail' question.id question.slug %}">{{ question.title }}</a>
+                </h3>
+                <div class="question-excerpt">{{ question.content|striptags|truncatewords:30 }}</div>
+                <div class="question-meta">
+                    <div class="question-tags">
+                        {% for tag in question.tags.all %}
+                            <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                    <div class="question-user">
+                        {% if question.user.profile.avatar %}
+                            <img src="{{ question.user.profile.avatar.url }}" alt="{{ question.user.username }}" class="user-avatar">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ question.user.username }}" class="user-avatar">
+                        {% endif %}
+                        <a href="{% url 'forum:profile' question.user.username %}">{{ question.user.username }}</a>
+                        <span>asked {{ question.created_at|timesince }} ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="no-results">No questions found with this tag.</div>
+    {% endfor %}
+</div>
+
+{% include 'forum/includes/pagination.html' with page_obj=questions %}
+{% endblock %}
+

@@ -1,0 +1,277 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+{% load markdown_extras %}
+
+{% block title %}{{ question.title }} - DevOverflow{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/question-styles.css' %}">
+{% endblock %}
+
+{% block sidebar_content %}
+<div class="sidebar-tags">
+    <h3>Related Tags</h3>
+    <div class="tags-list">
+        {% for tag in question.tags.all %}
+            <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }} <span class="tag-count">×{{ tag.count }}</span></a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="question-header">
+    <div class="question-title-header">
+        <h1>{{ question.title }}</h1>
+        <a href="{% url 'forum:question_create' %}" class="btn btn-primary">Ask Question</a>
+    </div>
+    <div class="question-info">
+        <div class="question-stats-summary">
+            <div class="question-stat">
+                <span>Asked</span>
+                <span>{{ question.created_at|date:"M j, Y" }}</span>
+            </div>
+            <div class="question-stat">
+                <span>Viewed</span>
+                <span>{{ question.views }} times</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="post-layout">
+    <div class="vote-cell">
+        <form action="{% url 'forum:question_vote' question.id %}" method="post" class="vote-form">
+            {% csrf_token %}
+            <input type="hidden" name="vote_type" value="upvote">
+            <button type="submit" class="vote-button upvote {% if user_vote == 'upvote' %}voted{% endif %}" title="This question shows research effort; it is useful and clear"><i class="fas fa-caret-up"></i></button>
+        </form>
+        <div class="vote-count" id="question-votes">{{ question.votes_count }}</div>
+        <form action="{% url 'forum:question_vote' question.id %}" method="post" class="vote-form">
+            {% csrf_token %}
+            <input type="hidden" name="vote_type" value="downvote">
+            <button type="submit" class="vote-button downvote {% if user_vote == 'downvote' %}voted{% endif %}" title="This question does not show any research effort; it is unclear or not useful"><i class="fas fa-caret-down"></i></button>
+        </form>
+        <form action="{% url 'forum:bookmark_question' question.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="post-menu-btn bookmark {% if is_bookmarked %}bookmarked{% endif %}" title="Bookmark this question">
+                <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+            </button>
+        </form>
+    </div>
+    
+    <div class="post-cell">
+        <div class="post-content">
+            {{ question.content|markdown|safe }}
+        </div>
+        <div class="post-tags">
+            {% for tag in question.tags.all %}
+                <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <div class="post-author">
+        <div class="author-card">
+            {% if question.user.profile.avatar %}
+                <img src="{{ question.user.profile.avatar.url }}" alt="{{ question.user.username }}" class="author-avatar">
+            {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" alt="{{ question.user.username }}" class="author-avatar">
+            {% endif %}
+            <div class="author-info">
+                <div class="author-action">asked {{ question.created_at|date:"M j, Y" }}</div>
+                <a href="{% url 'forum:profile' question.user.username %}" class="author-name">{{ question.user.username }}</a>
+                <div class="author-reputation">{{ question.user.profile.reputation }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="comments-container">
+    {% if question.comments.exists %}
+    <div class="comments-list">
+        {% for comment in question.comments.all %}
+        <div class="comment">
+            <div class="comment-text">{{ comment.content }}</div>
+            <a href="{% url 'forum:profile' comment.user.username %}" class="comment-user">{{ comment.user.username }}</a>
+            <span class="comment-date">{{ comment.created_at|date:"M j, Y" }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% if user.is_authenticated %}
+    <form action="{% url 'forum:add_question_comment' question.id %}" method="post" class="add-comment">
+        {% csrf_token %}
+        <textarea name="content" placeholder="Add a comment..." required></textarea>
+        <button type="submit" class="btn btn-sm">Add Comment</button>
+    </form>
+    {% else %}
+    <div class="login-to-comment">
+        <a href="{% url 'login' %}?next={{ request.path }}">Log in</a> to add a comment.
+    </div>
+    {% endif %}
+</div>
+
+<div class="answers-header">
+    <h2><span id="answers-count">{{ answers.count }}</span> Answers</h2>
+    <div class="answers-sort">
+        <span>Sorted by:</span>
+        <select id="answers-sort-select" onchange="location = this.value;">
+            <option value="{% url 'forum:question_detail' question.id question.slug %}?sort=votes" {% if sort == 'votes' %}selected{% endif %}>Votes</option>
+            <option value="{% url 'forum:question_detail' question.id question.slug %}?sort=newest" {% if sort == 'newest' %}selected{% endif %}>Newest</option>
+            <option value="{% url 'forum:question_detail' question.id question.slug %}?sort=oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest</option>
+        </select>
+    </div>
+</div>
+
+<div id="answers-container">
+    {% for answer in answers %}
+    <div class="answer {% if answer.is_accepted %}accepted-answer{% endif %}" id="answer-{{ answer.id }}">
+        <div class="post-layout">
+            <div class="vote-cell">
+                {% if answer.is_accepted %}
+                <div class="accepted-checkmark" title="This answer is accepted"><i class="fas fa-check"></i></div>
+                {% elif user.is_authenticated and question.user == user %}
+                <form action="{% url 'forum:accept_answer' answer.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="accept-answer-btn" title="Accept this answer"><i class="far fa-check-circle"></i></button>
+                </form>
+                {% endif %}
+                
+                <form action="{% url 'forum:answer_vote' answer.id %}" method="post" class="vote-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="vote_type" value="upvote">
+                    <button type="submit" class="vote-button upvote {% if answer.user_vote == 'upvote' %}voted{% endif %}" title="This answer is useful"><i class="fas fa-caret-up"></i></button>
+                </form>
+                <div class="vote-count">{{ answer.votes_count }}</div>
+                <form action="{% url 'forum:answer_vote' answer.id %}" method="post" class="vote-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="vote_type" value="downvote">
+                    <button type="submit" class="vote-button downvote {% if answer.user_vote == 'downvote' %}voted{% endif %}" title="This answer is not useful"><i class="fas fa-caret-down"></i></button>
+                </form>
+            </div>
+            
+            <div class="post-cell">
+                <div class="post-content">
+                    {{ answer.content|markdown|safe }}
+                </div>
+            </div>
+            
+            <div class="post-author">
+                <div class="author-card">
+                    {% if answer.user.profile.avatar %}
+                        <img src="{{ answer.user.profile.avatar.url }}" alt="{{ answer.user.username }}" class="author-avatar">
+                    {% else %}
+                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ answer.user.username }}" class="author-avatar">
+                    {% endif %}
+                    <div class="author-info">
+                        <div class="author-action">answered {{ answer.created_at|date:"M j, Y" }}</div>
+                        <a href="{% url 'forum:profile' answer.user.username %}" class="author-name">{{ answer.user.username }}</a>
+                        <div class="author-reputation">{{ answer.user.profile.reputation }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="comments-container">
+            {% if answer.comments.exists %}
+            <div class="comments-list">
+                {% for comment in answer.comments.all %}
+                <div class="comment">
+                    <div class="comment-text">{{ comment.content }}</div>
+                    <a href="{% url 'forum:profile' comment.user.username %}" class="comment-user">{{ comment.user.username }}</a>
+                    <span class="comment-date">{{ comment.created_at|date:"M j, Y" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% if user.is_authenticated %}
+            <form action="{% url 'forum:add_answer_comment' answer.id %}" method="post" class="add-comment">
+                {% csrf_token %}
+                <textarea name="content" placeholder="Add a comment..." required></textarea>
+                <button type="submit" class="btn btn-sm">Add Comment</button>
+            </form>
+            {% else %}
+            <div class="login-to-comment">
+                <a href="{% url 'login' %}?next={{ request.path }}">Log in</a> to add a comment.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="no-answers">No answers yet. Be the first to answer this question!</div>
+    {% endfor %}
+</div>
+
+{% if user.is_authenticated %}
+<div class="your-answer">
+    <h2>Your Answer</h2>
+    <form action="{% url 'forum:add_answer' question.id %}" method="post">
+        {% csrf_token %}
+        <div class="editor-container">
+            <div class="editor-toolbar">
+                <button type="button" class="toolbar-btn" title="Bold" data-tag="**"><i class="fas fa-bold"></i></button>
+                <button type="button" class="toolbar-btn" title="Italic" data-tag="*"><i class="fas fa-italic"></i></button>
+                <button type="button" class="toolbar-btn" title="Code" data-tag="`"><i class="fas fa-code"></i></button>
+                <button type="button" class="toolbar-btn" title="Link" data-tag="[](url)"><i class="fas fa-link"></i></button>
+                <button type="button" class="toolbar-btn" title="Quote" data-tag="> "><i class="fas fa-quote-left"></i></button>
+                <button type="button" class="toolbar-btn" title="Image" data-tag="![](image-url)"><i class="fas fa-image"></i></button>
+            </div>
+            <textarea id="answer-editor" name="content" placeholder="Write your answer here..." required></textarea>
+        </div>
+        <div class="post-button-container">
+            <button type="submit" class="btn btn-primary">Post Your Answer</button>
+        </div>
+    </form>
+    <div class="guidelines">
+        <p>By clicking "Post Your Answer", you agree to our <a href="{% url 'forum:terms' %}">terms of service</a> and acknowledge that you have read and understand our <a href="{% url 'forum:privacy' %}">privacy policy</a> and <a href="{% url 'forum:guidelines' %}">code of conduct</a>.</p>
+    </div>
+</div>
+{% else %}
+<div class="login-to-answer">
+    <p>You must <a href="{% url 'login' %}?next={{ request.path }}">log in</a> to answer this question.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Editor toolbar functionality
+        document.querySelectorAll('.toolbar-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const editor = document.getElementById('answer-editor');
+                const tag = this.dataset.tag;
+                const selectionStart = editor.selectionStart;
+                const selectionEnd = editor.selectionEnd;
+                const selectedText = editor.value.substring(selectionStart, selectionEnd);
+                
+                let replacement = '';
+                
+                if (tag === '`' && selectedText.includes('\n')) {
+                    // Code block for multi-line selection
+                    replacement = '```\n' + selectedText + '\n```';
+                } else if (tag === '> ') {
+                    // Quote - add to each line
+                    replacement = selectedText.split('\n').map(line => '> ' + line).join('\n');
+                } else if (tag === '[](url)') {
+                    // Link
+                    replacement = '[' + (selectedText || 'link text') + '](url)';
+                } else if (tag === '![](image-url)') {
+                    // Image
+                    replacement = '![' + (selectedText || 'alt text') + '](image-url)';
+                } else {
+                    // Bold, italic, inline code
+                    replacement = tag + selectedText + tag;
+                }
+                
+                editor.focus();
+                document.execCommand('insertText', false, replacement);
+            });
+        });
+    });
+</script>
+{% endblock %}
+

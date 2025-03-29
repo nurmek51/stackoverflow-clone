@@ -1,0 +1,125 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DevOverflow{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <a href="{% url 'forum:index' %}">DevOverflow</a>
+            </div>
+            <div class="search-container">
+                <form action="{% url 'forum:search' %}" method="GET" id="search-form">
+                    <input type="text" id="search-input" name="q" placeholder="Search..." value="{{ request.GET.q|default:'' }}">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{% url 'forum:index' %}" {% if request.resolver_match.url_name == 'index' %}class="active"{% endif %}>Home</a></li>
+                    <li><a href="{% url 'forum:question_list' %}" {% if request.resolver_match.url_name == 'question_list' %}class="active"{% endif %}>Questions</a></li>
+                    <li><a href="{% url 'forum:tag_list' %}" {% if request.resolver_match.url_name == 'tag_list' %}class="active"{% endif %}>Tags</a></li>
+                    <li><a href="{% url 'forum:user_list' %}" {% if request.resolver_match.url_name == 'user_list' %}class="active"{% endif %}>Users</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons">
+                {% if user.is_authenticated %}
+                <div class="user-menu">
+                    <a href="{% url 'forum:profile' user.username %}">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="user-avatar">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.username }}" class="user-avatar">
+                        {% endif %}
+                    </a>
+                    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline">Log out</button>
+                    </form>
+                </div>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline">Log in</a>
+                <a href="{% url 'register' %}" class="btn btn-primary">Sign up</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main class="container main-container">
+        {% block sidebar %}
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="{% url 'forum:index' %}" {% if request.resolver_match.url_name == 'index' %}class="active"{% endif %}><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#"><i class="fas fa-globe"></i> Public</a>
+                        <ul>
+                            <li><a href="{% url 'forum:question_list' %}" {% if request.resolver_match.url_name == 'question_list' %}class="active-sub"{% endif %}><i class="fas fa-question"></i> Questions</a></li>
+                            <li><a href="{% url 'forum:tag_list' %}" {% if request.resolver_match.url_name == 'tag_list' %}class="active-sub"{% endif %}><i class="fas fa-tag"></i> Tags</a></li>
+                            <li><a href="{% url 'forum:user_list' %}" {% if request.resolver_match.url_name == 'user_list' %}class="active-sub"{% endif %}><i class="fas fa-users"></i> Users</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+            {% block sidebar_content %}{% endblock %}
+        </div>
+        {% endblock %}
+
+        <div class="content">
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container footer-container">
+            <div class="footer-logo">
+                <a href="{% url 'forum:index' %}">DevOverflow</a>
+            </div>
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>DevOverflow</h4>
+                    <ul>
+                        <li><a href="{% url 'forum:about' %}">About</a></li>
+                        <li><a href="#">Products</a></li>
+                        <li><a href="#">For Teams</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="{% url 'forum:help' %}">Help</a></li>
+                        <li><a href="{% url 'forum:guidelines' %}">Guidelines</a></li>
+                        <li><a href="{% url 'forum:terms' %}">Terms of Service</a></li>
+                        <li><a href="{% url 'forum:privacy' %}">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-copyright">
+                <p>&copy; {% now "Y" %} DevOverflow. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>
+

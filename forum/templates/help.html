@@ -1,0 +1,132 @@
+{% extends 'forum/base.html' %}
+
+{% block title %}Help Center - DevOverflow{% endblock %}
+
+{% block content %}
+<div class="static-page help-center">
+    <h1>Help Center</h1>
+    
+    <div class="help-navigation">
+        <ul>
+            <li><a href="#asking">Asking Questions</a></li>
+            <li><a href="#answering">Answering Questions</a></li>
+            <li><a href="#reputation">Reputation & Badges</a></li>
+            <li><a href="#formatting">Formatting</a></li>
+            <li><a href="#account">Account Settings</a></li>
+        </ul>
+    </div>
+    
+    <section id="asking" class="help-section">
+        <h2>Asking Questions</h2>
+        
+        <h3>How do I ask a good question?</h3>
+        <p>Good questions tend to receive faster, better answers. To ask a good question:</p>
+        <ul>
+            <li>Search first to see if your question has already been answered</li>
+            <li>Be specific about what you're trying to accomplish</li>
+            <li>Include code, error messages, and other relevant details</li>
+            <li>Proofread your question for clarity and correctness</li>
+            <li>Add appropriate tags to help categorize your question</li>
+        </ul>
+        
+        <h3>What should I avoid when asking questions?</h3>
+        <ul>
+            <li>Asking multiple questions in a single post</li>
+            <li>Posting very broad, opinion-based questions</li>
+            <li>Asking for recommendations for books, tools, libraries, etc.</li>
+            <li>Posting homework questions without showing any effort</li>
+        </ul>
+    </section>
+    
+    <section id="answering" class="help-section">
+        <h2>Answering Questions</h2>
+        
+        <h3>How do I write a good answer?</h3>
+        <p>Good answers are thorough, clear, and helpful. To write a good answer:</p>
+        <ul>
+            <li>Answer the question directly and completely</li>
+            <li>Provide explanations, not just code</li>
+            <li>Include references and sources when appropriate</li>
+            <li>Format your answer for readability</li>
+        </ul>
+        
+        <h3>What if I'm not sure about my answer?</h3>
+        <p>If you're not 100% sure about your answer, it's still valuable to share what you know. Just be clear about any uncertainties or limitations in your answer.</p>
+    </section>
+    
+    <section id="reputation" class="help-section">
+        <h2>Reputation & Badges</h2>
+        
+        <h3>What is reputation?</h3>
+        <p>Reputation is a measure of how much the community trusts you. You earn reputation when:</p>
+        <ul>
+            <li>Your question is upvoted: +5</li>
+            <li>Your answer is upvoted: +10</li>
+            <li>Your answer is accepted: +15</li>
+        </ul>
+        <p>You lose reputation when:</p>
+        <ul>
+            <li>Your question is downvoted: -2</li>
+            <li>Your answer is downvoted: -2</li>
+            <li>You downvote an answer: -1</li>
+        </ul>
+        
+        <h3>What are badges?</h3>
+        <p>Badges are awarded for specific achievements and contributions. They come in three levels: bronze, silver, and gold, representing increasing levels of achievement.</p>
+    </section>
+    
+    <section id="formatting" class="help-section">
+        <h2>Formatting</h2>
+        
+        <h3>How do I format code in my posts?</h3>
+        <p>You can format code in your posts using Markdown:</p>
+        <ul>
+            <li>For inline code, use backticks: `code`</li>
+            <li>For code blocks, use triple backticks or indent with 4 spaces:
+<pre>```
+function example() {
+    return "Hello, world!";
+}
+```</pre>
+            </li>
+        </ul>
+        
+        <h3>How do I format text in my posts?</h3>
+        <p>You can use Markdown for text formatting:</p>
+        <ul>
+            <li>*italic* or _italic_</li>
+            <li>**bold** or __bold__</li>
+            <li># Header 1, ## Header 2, etc.</li>
+            <li>- List item (unordered list)</li>
+            <li>1. List item (ordered list)</li>
+            <li>[Link text](URL)</li>
+            <li>![Alt text](image URL)</li>
+            <li>> Quote</li>
+        </ul>
+    </section>
+    
+    <section id="account" class="help-section">
+        <h2>Account Settings</h2>
+        
+        <h3>How do I change my profile information?</h3>
+        <p>To update your profile:</p>
+        <ol>
+            <li>Click on your profile picture in the top right</li>
+            <li>Go to your profile page</li>
+            <li>Click "Edit Profile"</li>
+            <li>Update your information and click "Save Profile"</li>
+        </ol>
+        
+        <h3>How do I change my password?</h3>
+        <p>To change your password:</p>
+        <ol>
+            <li>Click on your profile picture in the top right</li>
+            <li>Go to "Settings"</li>
+            <li>Click on "Change Password"</li>
+            <li>Enter your current password and your new password</li>
+            <li>Click "Save Changes"</li>
+        </ol>
+    </section>
+</div>
+{% endblock %}
+

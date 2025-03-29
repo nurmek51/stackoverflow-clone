@@ -1,0 +1,84 @@
+{% extends 'forum/base.html' %}
+{% load static %}
+
+{% block title %}Users - DevOverflow{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Users</h1>
+    <p class="users-description">A list of DevOverflow users.</p>
+</div>
+
+<div class="users-filter">
+    <input type="text" id="user-filter" placeholder="Filter by username or location...">
+    <div class="users-sort">
+        <span>Sort by:</span>
+        <select id="users-sort-select" onchange="location = this.value;">
+            <option value="{% url 'forum:user_list' %}?sort=reputation" {% if sort == 'reputation' %}selected{% endif %}>Reputation</option>
+            <option value="{% url 'forum:user_list' %}?sort=newest" {% if sort == 'newest' %}selected{% endif %}>New users</option>
+            <option value="{% url 'forum:user_list' %}?sort=name" {% if sort == 'name' %}selected{% endif %}>Name</option>
+        </select>
+    </div>
+</div>
+
+<div class="users-grid">
+    {% for user_profile in users %}
+        <div class="user-card">
+            <div class="user-avatar">
+                {% if user_profile.profile.avatar %}
+                    <img src="{{ user_profile.profile.avatar.url }}" alt="{{ user_profile.username }}">
+                {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" alt="{{ user_profile.username }}">
+                {% endif %}
+            </div>
+            <div class="user-info">
+                <h3><a href="{% url 'forum:profile' user_profile.username %}">{{ user_profile.username }}</a></h3>
+                <div class="user-reputation">{{ user_profile.profile.reputation }} reputation</div>
+                {% if user_profile.profile.location %}
+                    <div class="user-location">{{ user_profile.profile.location }}</div>
+                {% endif %}
+                <div class="user-stats">
+                    <div class="user-stat">
+                        <span class="stat-number">{{ user_profile.questions.count }}</span>
+                        <span class="stat-label">questions</span>
+                    </div>
+                    <div class="user-stat">
+                        <span class="stat-number">{{ user_profile.answers.count }}</span>
+                        <span class="stat-label">answers</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="no-results">No users found.</div>
+    {% endfor %}
+</div>
+
+{% include 'forum/includes/pagination.html' with page_obj=users %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userFilter = document.getElementById('user-filter');
+        const userCards = document.querySelectorAll('.user-card');
+        
+        userFilter.addEventListener('input', function() {
+            const searchTerm = this.value.trim().toLowerCase();
+            
+            userCards.forEach(card => {
+                const username = card.querySelector('h3').textContent.toLowerCase();
+                const location = card.querySelector('.user-location') ? 
+                                 card.querySelector('.user-location').textContent.toLowerCase() : '';
+                
+                if (username.includes(searchTerm) || location.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+
