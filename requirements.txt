@@ -1,0 +1,41 @@
+# Main web framework
+Django>=4.2,<5.0
+
+# For building REST APIs
+djangorestframework>=3.14.0
+
+# Advanced authentication (registration, social login, etc.)
+django-allauth>=0.53.0
+
+# Enhanced form handling
+django-crispy-forms>=1.14.0
+
+# Tagging for questions and answers
+django-taggit>=2.0
+
+# Markdown support (for questions, answers, or comments)
+django-markdownx>=3.0
+
+# Image handling (e.g., user avatars)
+Pillow>=9.5.0
+
+# PostgreSQL driver (if you plan to use PostgreSQL)
+psycopg2-binary>=2.9.6
+
+# WebSocket support (e.g., for real-time notifications)
+django-channels>=0.7.0
+
+# Additional development tools and utilities
+django-extensions>=3.2.0
+
+# Environment variable configuration
+python-decouple>=3.8
+
+# WSGI server for production deployment
+gunicorn>=20.1.0
+
+# Simplified static file serving in production
+whitenoise>=6.4.0
+
+# JWT Auth
+djangorestframework-simplejwt==5.5.0
