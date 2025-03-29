@@ -1,7 +1,7 @@
-{% extends 'forum/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Edit Profile - DevOverflow{% endblock %}
+{% block title %}Edit Your Profile - DevOverflow{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/profile-styles.css' %}">
@@ -10,10 +10,10 @@
 {% block content %}
 <div class="edit-profile-container">
     <h1>Edit Your Profile</h1>
-    
+
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        
+
         {% if form.non_field_errors %}
         <div class="form-errors">
             {% for error in form.non_field_errors %}
@@ -21,30 +21,31 @@
             {% endfor %}
         </div>
         {% endif %}
-        
-        <div class="form-section">
-            <h2>Profile Information</h2>
-            
-            <div class="form-group">
-                <label for="{{ form.avatar.id_for_label }}">Profile Picture</label>
-                <div class="avatar-preview">
-                    {% if user.profile.avatar %}
-                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" id="avatar-preview-img">
-                    {% else %}
-                        <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.username }}" id="avatar-preview-img">
-                    {% endif %}
-                </div>
-                {{ form.avatar }}
-                <p class="form-help">Maximum file size: 2MB. Supported formats: JPG, PNG, GIF.</p>
-                {% if form.avatar.errors %}
-                    <div class="field-errors">
-                        {% for error in form.avatar.errors %}
-                            <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+
+       <div class="form-section">
+    <h2>Profile Information</h2>
+    <div class="form-group">
+        <label for="{{ form.avatar.id_for_label }}">Profile Picture</label>
+        <div class="avatar-preview">
+            {% if user.profile.avatar %}
+                <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" id="avatar-preview-img" style="max-width: 50px; max-height: 50px; border-radius: 3px;">
+                <p>Currently: {{ user.profile.avatar.url }}</p>
+            {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" alt="{{ user.username }}" id="avatar-preview-img" style="max-width: 50px; max-height: 50px; border-radius: 3px;">
+                <p>Currently: No image</p>
+            {% endif %}
+        </div>
+        {{ form.avatar }}
+        <p class="form-help">Maximum file size: 2MB. Supported formats: JPG, PNG, GIF.</p>
+        {% if form.avatar.errors %}
+            <div class="field-errors">
+                {% for error in form.avatar.errors %}
+                    <p class="error">{{ error }}</p>
+                {% endfor %}
             </div>
-            
+        {% endif %}
+    </div>
+
             <div class="form-group">
                 <label for="{{ form.display_name.id_for_label }}">Display Name</label>
                 {{ form.display_name }}
@@ -56,31 +57,9 @@
                     </div>
                 {% endif %}
             </div>
-            
-            <div class="form-group">
-                <label for="{{ form.location.id_for_label }}">Location</label>
-                {{ form.location }}
-                {% if form.location.errors %}
-                    <div class="field-errors">
-                        {% for error in form.location.errors %}
-                            <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="form-group">
-                <label for="{{ form.website.id_for_label }}">Website</label>
-                {{ form.website }}
-                {% if form.website.errors %}
-                    <div class="field-errors">
-                        {% for error in form.website.errors %}
-                            <p class="error">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-            
+
+
+
             <div class="form-group">
                 <label for="{{ form.bio.id_for_label }}">About Me</label>
                 {{ form.bio }}
@@ -93,10 +72,9 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <div class="form-section">
             <h2>Email Settings</h2>
-            
             <div class="form-group">
                 <label for="{{ form.email.id_for_label }}">Email</label>
                 {{ form.email }}
@@ -108,7 +86,6 @@
                     </div>
                 {% endif %}
             </div>
-            
             <div class="form-group checkbox-group">
                 {{ form.email_notifications }}
                 <label for="{{ form.email_notifications.id_for_label }}">Receive email notifications</label>
@@ -121,10 +98,10 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Save Profile</button>
-            <a href="{% url 'forum:profile' user.username %}" class="btn btn-outline">Cancel</a>
+            <a href="{% url 'forum:profile' user.pk %}" class="btn btn-outline">Cancel</a>
         </div>
     </form>
 </div>
@@ -132,23 +109,20 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Preview avatar image before upload
-        const avatarInput = document.getElementById('{{ form.avatar.id_for_label }}');
-        const avatarPreview = document.getElementById('avatar-preview-img');
-        
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarInput = document.getElementById('{{ form.avatar.id_for_label }}');
+    const avatarPreview = document.getElementById('avatar-preview-img');
+    if (avatarInput) {
         avatarInput.addEventListener('change', function() {
             if (this.files && this.files[0]) {
                 const reader = new FileReader();
-                
                 reader.onload = function(e) {
                     avatarPreview.src = e.target.result;
                 }
-                
                 reader.readAsDataURL(this.files[0]);
             }
         });
-    });
+    }
+});
 </script>
 {% endblock %}
-

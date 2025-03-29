@@ -1,10 +1,226 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Questions - DevOverflow{% endblock %}
+
+{% block sidebar_content %}
+<div class="sidebar-tags">
+    <h3>Popular Tags</h3>
+    <div class="tags-list">
+        {% for tag in popular_tags %}
+            <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }} <span class="tag-count">×{{ tag.count }}</span></a>
+        {% empty %}
+            <p>No tags found.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>All Questions</h1>
+    <div class="content-actions">
+        <a href="{% url 'forum:question_create' %}" class="btn btn-primary">Ask Question</a>
+    </div>
+</div>
+
+<div class="questions-stats">
+    <div class="questions-count">{{ paginator.count }} questions</div>
+    
+    <div class="questions-filter-options">
+        <div class="filter-group">
+            <span class="filter-label">Filter:</span>
+            <select id="filter-select" onchange="applyFilter()">
+                <option value="all" {% if filter == 'all' or not filter %}selected{% endif %}>All Questions</option>
+                <option value="no-answers" {% if filter == 'no-answers' %}selected{% endif %}>No Answers</option>
+                <option value="no-accepted-answer" {% if filter == 'no-accepted-answer' %}selected{% endif %}>No Accepted Answer</option>
+            </select>
+        </div>
+        
+        <div class="sort-group">
+            <span class="sort-label">Sort:</span>
+            <div class="questions-filter">
+                <a href="{% url 'forum:question_list' %}?sort=newest{% if filter %}&filter={{ filter }}{% endif %}" class="filter-btn {% if sort == 'newest' or not sort %}active{% endif %}">Newest</a>
+                <a href="{% url 'forum:question_list' %}?sort=active{% if filter %}&filter={{ filter }}{% endif %}" class="filter-btn {% if sort == 'active' %}active{% endif %}">Active</a>
+                <a href="{% url 'forum:question_list' %}?sort=unanswered{% if filter %}&filter={{ filter }}{% endif %}" class="filter-btn {% if sort == 'unanswered' %}active{% endif %}">Unanswered</a>
+                <a href="{% url 'forum:question_list' %}?sort=votes{% if filter %}&filter={{ filter }}{% endif %}" class="filter-btn {% if sort == 'votes' %}active{% endif %}">Votes</a>
+                <a href="{% url 'forum:question_list' %}?sort=views{% if filter %}&filter={{ filter }}{% endif %}" class="filter-btn {% if sort == 'views' %}active{% endif %}">Views</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="questions-list">
+    {% for question in questions %}
+        <div class="question-item">
+            <div class="question-stats">
+                <div class="stat">
+                    <div class="stat-number">{{ question.score }}</div>
+                    <div class="stat-label">votes</div>
+                </div>
+                <div class="stat {% if question.answers.count > 0 %}has-answers{% endif %} {% if question.has_accepted_answer %}has-accepted{% endif %}">
+                    <div class="stat-number">{{ question.answers.count }}</div>
+                    <div class="stat-label">answers</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ question.views }}</div>
+                    <div class="stat-label">views</div>
+                </div>
+            </div>
+            <div class="question-content">
+                <h3 class="question-title">
+                    <a href="{% url 'forum:question_detail' question.id question.title|slugify %}">{{ question.title }}</a>
+                </h3>
+                <div class="question-excerpt">{{ question.body|striptags|truncatewords:30 }}</div>
+                <div class="question-meta">
+                    <div class="question-tags">
+                        {% for tag in question.tags.all %}
+                            <a href="{% url 'forum:tag_detail' tag.slug %}" class="tag">{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                    <div class="question-user">
+                        {% if question.author.profile.avatar %}
+                            <img src="{{ question.author.profile.avatar.url }}" alt="{{ question.author.username }}" class="user-avatar">
+                        {% else %}
+                            <img src="{% static 'images/default-avatar.png' %}" alt="{{ question.author.username }}" class="user-avatar">
+                        {% endif %}
+                        <a href="{% url 'forum:profile' question.author.pk %}">{{ question.author.username }}</a>
+                        <span class="asked-time">asked {{ question.created_at|timesince }} ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="no-results">
+            <p>No questions found matching your criteria.</p>
+            <p>Try adjusting your filters or <a href="{% url 'forum:question_create' %}">ask a question</a>.</p>
+        </div>
+    {% endfor %}
+</div>
+
+
+{% include 'includes/pagination.html' with page_obj=questions %}
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .questions-stats {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .questions-count {
+        font-size: 17px;
+        color: #6a737c;
+    }
+    
+    .questions-filter-options {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group, .sort-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .filter-label, .sort-label {
+        font-size: 13px;
+        color: #6a737c;
+    }
+    
+    #filter-select {
+        padding: 6px 8px;
+        border: 1px solid #d6d9dc;
+        border-radius: 3px;
+        font-size: 13px;
+    }
+    
+    .bounty-indicator {
+        display: inline-block;
+        padding: 2px 6px;
+        background-color: #0077cc;
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        border-radius: 3px;
+        margin-left: 8px;
+    }
+    
+    .has-accepted {
+        color: #48a868;
+    }
+    
+    .reputation-score {
+        color: #6a737c;
+        margin: 0 4px;
+    }
+    
+    .asked-time, .activity-time {
+        color: #6a737c;
+        margin-left: 4px;
+    }
+    
+    .activity-time {
+        margin-left: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .questions-stats {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .questions-filter-options {
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+        }
+        
+        .filter-group, .sort-group {
+            width: 100%;
+        }
+        
+        #filter-select {
+            flex-grow: 1;
+        }
+        
+        .questions-filter {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function applyFilter() {
+        const filterSelect = document.getElementById('filter-select');
+        const selectedFilter = filterSelect.value;
+        
+        // Get current URL and parameters
+        const url = new URL(window.location.href);
+        
+        // Update or add the filter parameter
+        if (selectedFilter === 'all') {
+            url.searchParams.delete('filter');
+        } else {
+            url.searchParams.set('filter', selectedFilter);
+        }
+        
+        // Navigate to the new URL
+        window.location.href = url.toString();
+    }
+</script>
+{% endblock %}
+

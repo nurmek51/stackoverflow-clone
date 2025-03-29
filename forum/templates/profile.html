@@ -1,10 +1,308 @@
-{% extends 'forum/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}{{ profile_user.username }} - DevOverflow{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/profile-styles.css' %}">
+<style>
+    /* Profile page styles */
+    .profile-container {
+        width: 100%;
+    }
+
+    /* Profile header */
+    .profile-header {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-gap: 16px;
+        padding: 24px 0;
+        border-bottom: 1px solid #e4e6e8;
+        margin-bottom: 16px;
+    }
+
+    .profile-avatar {
+        grid-column: 1;
+        width: 128px;
+        height: 128px;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-info {
+        grid-column: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .profile-info h1 {
+        font-size: 34px;
+        margin-bottom: 8px;
+        font-weight: 400;
+    }
+
+    .profile-stats {
+        display: flex;
+        margin-bottom: 12px;
+    }
+
+    .profile-stats .stat {
+        margin-right: 16px;
+        display: flex;
+        align-items: baseline;
+    }
+
+    .profile-stats .stat-number {
+        font-size: 17px;
+        font-weight: 700;
+        margin-right: 4px;
+    }
+
+    .profile-stats .stat-label {
+        font-size: 13px;
+        color: #6a737c;
+    }
+
+    .profile-meta {
+        display: flex;
+        flex-wrap: wrap;
+        font-size: 13px;
+        color: #6a737c;
+    }
+
+    .profile-meta .meta-item {
+        margin-right: 12px;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-meta .meta-item i {
+        margin-right: 6px;
+    }
+
+    .profile-actions {
+        grid-column: 3;
+        align-self: flex-start;
+    }
+
+    /* Profile tabs */
+    .profile-tabs {
+        width: 100%;
+    }
+
+    .tabs-header {
+        display: flex;
+        border-bottom: 1px solid #e4e6e8;
+        margin-bottom: 16px;
+    }
+
+    .tab {
+        padding: 8px 12px;
+        margin-right: 4px;
+        color: #6a737c;
+        font-size: 13px;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+    }
+
+    .tab:hover {
+        color: #0c0d0e;
+        border-bottom-color: #e4e6e8;
+    }
+
+    .tab.active {
+        color: #0c0d0e;
+        font-weight: 500;
+        border-bottom-color: #f48024;
+    }
+
+    /* Profile content */
+    .tab-pane {
+        display: none;
+    }
+
+    .tab-pane.active {
+        display: block;
+    }
+
+    .tab-pane h2 {
+        font-size: 21px;
+        margin-bottom: 16px;
+        font-weight: 400;
+    }
+
+    /* Profile bio */
+    .profile-bio {
+        background-color: #fff;
+        border: 1px solid #e4e6e8;
+        border-radius: 3px;
+        padding: 16px;
+        margin-bottom: 24px;
+    }
+
+    .profile-bio h2 {
+        font-size: 21px;
+        margin-bottom: 12px;
+        font-weight: 400;
+    }
+
+    .bio-content {
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    /* Questions list in profile */
+    .questions-list .question-item {
+        padding: 12px 0;
+    }
+
+    /* Answers list in profile */
+    .answers-list .answer-item {
+        padding: 16px 0;
+        border-bottom: 1px solid #e4e6e8;
+        display: flex;
+    }
+
+    .answer-stats {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        margin-right: 16px;
+        min-width: 80px;
+    }
+
+    .answer-content {
+        flex-grow: 1;
+    }
+
+    .answer-excerpt {
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+
+    .answer-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #6a737c;
+    }
+
+    .answer-question {
+        margin-bottom: 4px;
+    }
+
+    .answer-question a {
+        font-weight: 500;
+    }
+
+    /* Tags in profile */
+    .profile-tags {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+    }
+
+    .profile-tag-item {
+        border: 1px solid #e4e6e8;
+        border-radius: 3px;
+        padding: 12px;
+    }
+
+    .profile-tag-item .tag-name {
+        margin-bottom: 8px;
+    }
+
+    .profile-tag-item .tag-stats {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #6a737c;
+    }
+
+    /* Badges */
+    .badge-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+    }
+
+    .badge-gold {
+        background-color: #fff4d1;
+        color: #ab7800;
+    }
+
+    .badge-silver {
+        background-color: #e8e8e8;
+        color: #6a737c;
+    }
+
+    .badge-bronze {
+        background-color: #f2e9e1;
+        color: #a05a2c;
+    }
+
+    .badge i {
+        margin-right: 4px;
+        font-size: 10px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-header {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto auto;
+            text-align: center;
+        }
+
+        .profile-avatar {
+            grid-column: 1;
+            grid-row: 1;
+            margin: 0 auto 16px;
+        }
+
+        .profile-info {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .profile-stats {
+            justify-content: center;
+        }
+
+        .profile-meta {
+            justify-content: center;
+        }
+
+        .profile-actions {
+            grid-column: 1;
+            grid-row: 3;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .tabs-header {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 8px;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -43,14 +341,17 @@
             {% endif %}
             {% if profile_user.profile.website %}
             <div class="meta-item">
-                <i class="fas fa-link"></i> <a href="{{ profile_user.profile.website }}" target="_blank" rel="noopener noreferrer">{{ profile_user.profile.website }}</a>
+                <i class="fas fa-link"></i>
+                <a href="{{ profile_user.profile.website }}" target="_blank" rel="noopener noreferrer">
+                    {{ profile_user.profile.website }}
+                </a>
             </div>
             {% endif %}
         </div>
     </div>
     {% if user == profile_user %}
     <div class="profile-actions">
-        <a href="{% url 'forum:edit_profile' %}" class="btn btn-outline">Edit Profile</a>
+        <a href="{% url 'forum:profile_update' profile_user.pk %}" class="btn btn-outline">Edit Profile</a>
     </div>
     {% endif %}
 </div>
@@ -71,9 +372,10 @@
         <a href="?tab=bookmarks" class="tab {% if tab == 'bookmarks' %}active{% endif %}">Bookmarks</a>
         <a href="?tab=tags" class="tab {% if tab == 'tags' %}active{% endif %}">Tags</a>
     </div>
-    
+
     <div class="tabs-content">
         {% if tab == 'questions' or not tab %}
+            <!-- QUESTIONS TAB -->
             <div class="tab-pane active">
                 <h2>Questions</h2>
                 {% if questions %}
@@ -96,7 +398,9 @@
                                 </div>
                                 <div class="question-content">
                                     <h3 class="question-title">
-                                        <a href="{% url 'forum:question_detail' question.id question.slug %}">{{ question.title }}</a>
+                                        <a href="{% url 'forum:question_detail' question.id question.slug %}">
+                                            {{ question.title }}
+                                        </a>
                                     </h3>
                                     <div class="question-meta">
                                         <div class="question-tags">
@@ -112,12 +416,13 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% include 'forum/includes/pagination.html' with page_obj=questions %}
+                    {% include 'includes/pagination.html' with page_obj=questions %}
                 {% else %}
                     <div class="no-results">No questions found.</div>
                 {% endif %}
             </div>
         {% elif tab == 'answers' %}
+            <!-- ANSWERS TAB -->
             <div class="tab-pane active">
                 <h2>Answers</h2>
                 {% if answers %}
@@ -137,10 +442,14 @@
                                     {% endif %}
                                 </div>
                                 <div class="answer-content">
-                                    <div class="answer-excerpt">{{ answer.content|striptags|truncatewords:30 }}</div>
+                                    <div class="answer-excerpt">
+                                        {{ answer.content|striptags|truncatewords:30 }}
+                                    </div>
                                     <div class="answer-meta">
                                         <div class="answer-question">
-                                            <a href="{% url 'forum:question_detail' answer.question.id answer.question.slug %}">{{ answer.question.title }}</a>
+                                            <a href="{% url 'forum:question_detail' answer.question.id answer.question.slug %}">
+                                                {{ answer.question.title }}
+                                            </a>
                                         </div>
                                         <div class="answer-date">
                                             answered {{ answer.created_at|timesince }} ago
@@ -150,12 +459,13 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% include 'forum/includes/pagination.html' with page_obj=answers %}
+                    {% include 'includes/pagination.html' with page_obj=answers %}
                 {% else %}
                     <div class="no-results">No answers found.</div>
                 {% endif %}
             </div>
         {% elif tab == 'bookmarks' %}
+            <!-- BOOKMARKS TAB -->
             <div class="tab-pane active">
                 <h2>Bookmarks</h2>
                 {% if bookmarks %}
@@ -178,7 +488,9 @@
                                 </div>
                                 <div class="question-content">
                                     <h3 class="question-title">
-                                        <a href="{% url 'forum:question_detail' bookmark.question.id bookmark.question.slug %}">{{ bookmark.question.title }}</a>
+                                        <a href="{% url 'forum:question_detail' bookmark.question.id bookmark.question.slug %}">
+                                            {{ bookmark.question.title }}
+                                        </a>
                                     </h3>
                                     <div class="question-meta">
                                         <div class="question-tags">
@@ -194,12 +506,13 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% include 'forum/includes/pagination.html' with page_obj=bookmarks %}
+                    {% include 'includes/pagination.html' with page_obj=bookmarks %}
                 {% else %}
                     <div class="no-results">No bookmarks found.</div>
                 {% endif %}
             </div>
         {% elif tab == 'tags' %}
+            <!-- TAGS TAB -->
             <div class="tab-pane active">
                 <h2>Tags</h2>
                 {% if tags %}
@@ -216,7 +529,7 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% include 'forum/includes/pagination.html' with page_obj=tags %}
+                    {% include 'includes/pagination.html' with page_obj=tags %}
                 {% else %}
                     <div class="no-results">No tags found.</div>
                 {% endif %}
@@ -225,4 +538,3 @@
     </div>
 </div>
 {% endblock %}
-

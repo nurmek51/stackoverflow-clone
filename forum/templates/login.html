@@ -1,4 +1,4 @@
-{% extends 'forum/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Log In - DevOverflow{% endblock %}
@@ -151,21 +151,12 @@
         </div>
         {% endif %}
     {% endif %}
-    
-    <div class="social-login">
-        <a href="{% url 'social:begin' 'google-oauth2' %}" class="social-btn">
-            <i class="fab fa-google"></i> Log in with Google
-        </a>
-        <a href="{% url 'social:begin' 'github' %}" class="social-btn">
-            <i class="fab fa-github"></i> Log in with GitHub
-        </a>
-    </div>
-    
+
     <div class="auth-divider">
         <span>or</span>
     </div>
     
-    <form method="post" action="{% url 'login' %}" class="auth-form">
+    <form method="post" action="{% url 'forum:login' %}" class="auth-form">
         {% csrf_token %}
         <div class="form-group">
             <label for="id_username">Username or Email</label>
@@ -190,8 +181,8 @@
     </form>
     
     <div class="auth-links">
-        <p><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
-        <p>Don't have an account? <a href="{% url 'register' %}">Sign up</a></p>
+        <p><a href="{% url 'forum:password_reset' %}">Forgot your password?</a></p>
+        <p>Don't have an account? <a href="{% url 'forum:register' %}">Sign up</a></p>
     </div>
 </div>
 {% endblock %}

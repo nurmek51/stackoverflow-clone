@@ -1,4 +1,4 @@
-{% extends 'forum/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %}Tags - DevOverflow{% endblock %}
@@ -23,20 +23,20 @@
             <div class="tag-name">
                 <a href="{% url 'forum:tag_detail' tag.slug %}">{{ tag.name }}</a>
             </div>
-            <div class="tag-description">
-                {{ tag.description|default:"No description available." }}
-            </div>
             <div class="tag-stats">
-                <span>{{ tag.count }} questions</span>
-                <span>{{ tag.today_count }} asked today</span>
+                <span>{{ tag.count|default:"0" }} questions</span>
+                <span>{{ tag.today_count|default:"0" }} asked today</span>
             </div>
         </div>
     {% empty %}
-        <div class="no-results">No tags found.</div>
+        <div class="no-results">
+            <p>No tags found.</p>
+            <p>Tags will appear here once questions with tags are created.</p>
+        </div>
     {% endfor %}
 </div>
 
-{% include 'forum/includes/pagination.html' with page_obj=tags %}
+{% include 'includes/pagination.html' with page_obj=tags %}
 {% endblock %}
 
 {% block extra_js %}
