@@ -1,0 +1,142 @@
+/* Ask Question page specific styles */
+
+.ask-question-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ask-question-container h1 {
+  font-size: 27px;
+  margin-bottom: 24px;
+}
+
+.question-guidelines {
+  background-color: #f8f9f9;
+  border: 1px solid #e4e6e8;
+  border-radius: 3px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.question-guidelines h2 {
+  font-size: 19px;
+  margin-bottom: 16px;
+}
+
+.question-guidelines p {
+  margin-bottom: 12px;
+}
+
+.question-guidelines ul {
+  list-style-type: disc;
+  margin-left: 24px;
+}
+
+.question-guidelines li {
+  margin-bottom: 8px;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.form-description {
+  color: #6a737c;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d6d9dc;
+  border-radius: 3px;
+}
+
+.editor-container {
+  border: 1px solid #d6d9dc;
+  border-radius: 3px;
+}
+
+.editor-toolbar {
+  padding: 8px;
+  border-bottom: 1px solid #d6d9dc;
+  background-color: #f8f9f9;
+  display: flex;
+}
+
+.toolbar-btn {
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  margin-right: 4px;
+  cursor: pointer;
+  color: #6a737c;
+  border-radius: 3px;
+}
+
+.toolbar-btn:hover {
+  background-color: #e4e6e8;
+}
+
+#question-body {
+  width: 100%;
+  min-height: 200px;
+  padding: 12px;
+  border: none;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.tag-item {
+  display: flex;
+  align-items: center;
+  background-color: #e1ecf4;
+  color: #39739d;
+  padding: 4px 8px;
+  border-radius: 3px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.tag-item .remove-tag {
+  margin-left: 6px;
+  cursor: pointer;
+  color: #39739d;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .ask-question-container {
+    padding: 0 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+

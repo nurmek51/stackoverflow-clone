@@ -1,0 +1,104 @@
+/* Tags page specific styles */
+
+.tags-description {
+  margin-bottom: 20px;
+  color: #6a737c;
+}
+
+.tags-filter {
+  margin-bottom: 20px;
+}
+
+.tags-filter input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #e4e6e8;
+  border-radius: 3px;
+}
+
+.tags-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.tag-card {
+  border: 1px solid #e4e6e8;
+  border-radius: 3px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tag-name {
+  margin-bottom: 8px;
+}
+
+.tag-name a {
+  display: inline-block;
+  padding: 4px 6px;
+  background-color: #e1ecf4;
+  color: #39739d;
+  border-radius: 3px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.tag-name a:hover {
+  background-color: #d0e3f1;
+  color: #2c5877;
+}
+
+.tag-description {
+  font-size: 13px;
+  color: #3b4045;
+  margin-bottom: 12px;
+  flex-grow: 1;
+}
+
+.tag-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6a737c;
+}
+
+/* Tag page (single tag) styles */
+.tag-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.tag-header .tag {
+  font-size: 16px;
+  margin-right: 12px;
+}
+
+.tag-header .tag-info {
+  color: #6a737c;
+  font-size: 13px;
+}
+
+.tag-header .tag-actions {
+  margin-left: auto;
+}
+
+.tag-header .tag-actions button {
+  margin-left: 8px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .tags-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .tags-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
