@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
 from .models import (
     Question, Answer, Comment, Tag, Vote, Profile, Badge,
-    UserBadge, Favorite, Notification, PostHistory,
+    AwardedBadge, Favorite, Notification, PostHistory,
 )
 
 class CommentInline(GenericTabularInline):
@@ -53,8 +53,8 @@ class BadgeAdmin(admin.ModelAdmin):
     list_display = ('name',)
     search_fields = ('name',)
 
-@admin.register(UserBadge)
-class UserBadgeAdmin(admin.ModelAdmin):
+@admin.register(AwardedBadge)
+class AwardedBadgeAdmin(admin.ModelAdmin):
     list_display = ('user', 'badge', 'awarded_at')
     list_filter = ('awarded_at',)
 
