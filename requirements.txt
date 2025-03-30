@@ -44,3 +44,5 @@ djangorestframework-simplejwt==5.5.0
 python-dotenv==1.1.0
 
 django-markdown-deux==1.0.6
+
+dj-database-url==2.3.0
