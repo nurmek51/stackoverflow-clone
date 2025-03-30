@@ -14,21 +14,15 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 env_path = os.path.join(BASE_DIR, '.env')
 load_dotenv(env_path)
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-(0*l&r8u*%g3w^2*qm%ej1v-2jtstp*&!*#edjrojf1q!68xd8'
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['stackoverflow-clone-production-4ddc.up.railway.app']
-
+ALLOWED_HOSTS = ['stackoverflow-clone-production-4ddc.up.railway.app', '127.0.0.1']
 
 INSTALLED_APPS = [
     'markdown_deux',
@@ -51,7 +45,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-
 ]
 
 default_db_url = os.getenv('DATABASE_URL')
@@ -67,7 +60,6 @@ if not default_db_url:
 DATABASES = {
     'default': dj_database_url.config(default=default_db_url)
 }
-
 
 ROOT_URLCONF = 'stackoverflow.urls'
 
@@ -88,10 +80,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'stackoverflow.wsgi.application'
-
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-# Database configuration is skipped
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -114,8 +102,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -124,4 +113,3 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
