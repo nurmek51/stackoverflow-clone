@@ -39,3 +39,6 @@ whitenoise>=6.4.0
 
 # JWT Auth
 djangorestframework-simplejwt==5.5.0
+
+# for .env
+python-dotenv==1.1.0
