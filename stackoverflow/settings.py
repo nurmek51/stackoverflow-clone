@@ -26,7 +26,8 @@ SECRET_KEY = 'django-insecure-(0*l&r8u*%g3w^2*qm%ej1v-2jtstp*&!*#edjrojf1q!68xd8
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['stackoverflow-clone-production-4ddc.up.railway.app']
+
 
 INSTALLED_APPS = [
     'markdown_deux',
