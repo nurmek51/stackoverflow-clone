@@ -22,7 +22,6 @@ urlpatterns = [
     path('privacy/', Terms.as_view(), name='privacy'),
     path('guideline/', GuidelineView.as_view(), name='guidelines'),
     path('', MainPageView.as_view(), name='index'),
-    path('search/', MainPageView.as_view(), name='search'),
     path('users/', UserListView.as_view(), name='user_list'),
     path('search/', SearchView.as_view(), name='search'),
 

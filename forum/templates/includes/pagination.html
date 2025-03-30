@@ -1,39 +1,21 @@
 {% if page_obj.has_other_pages %}
+{% if page_obj.has_other_pages %}
 <div class="pagination">
     {% if page_obj.has_previous %}
-        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page={{ page_obj.previous_page_number }}" class="pagination-btn prev-btn">Prev</a>
-    {% else %}
-        <span class="pagination-btn prev-btn disabled">Prev</span>
+        <a href="?q={{ query }}&type={{ search_type }}&{% if param_name %}{{ param_name }}{% else %}page{% endif %}={{ page_obj.previous_page_number }}" class="pagination-btn">&laquo; Previous</a>
     {% endif %}
 
-    {% if page_obj.number|add:'-2' > 1 %}
-        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page=1" class="pagination-btn">1</a>
-        {% if page_obj.number|add:'-2' > 2 %}
-            <span class="pagination-ellipsis">...</span>
-        {% endif %}
-    {% endif %}
-
-    {% for i in page_obj.paginator.page_range %}
-        {% if i >= page_obj.number|add:'-2' and i <= page_obj.number|add:'2' %}
-            {% if i == page_obj.number %}
-                <a class="pagination-btn active">{{ i }}</a>
-            {% else %}
-                <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page={{ i }}" class="pagination-btn">{{ i }}</a>
-            {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+            <span class="pagination-btn active">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?q={{ query }}&type={{ search_type }}&{% if param_name %}{{ param_name }}{% else %}page{% endif %}={{ num }}" class="pagination-btn">{{ num }}</a>
         {% endif %}
     {% endfor %}
 
-    {% if page_obj.number|add:'2' < page_obj.paginator.num_pages %}
-        {% if page_obj.number|add:'2' < page_obj.paginator.num_pages|add:'-1' %}
-            <span class="pagination-ellipsis">...</span>
-        {% endif %}
-        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page={{ page_obj.paginator.num_pages }}" class="pagination-btn">{{ page_obj.paginator.num_pages }}</a>
-    {% endif %}
-
     {% if page_obj.has_next %}
-        <a href="?{% if query %}q={{ query }}&{% endif %}{% if sort %}sort={{ sort }}&{% endif %}{% if search_type %}type={{ search_type }}&{% endif %}{% if tab %}tab={{ tab }}&{% endif %}page={{ page_obj.next_page_number }}" class="pagination-btn next-btn">Next</a>
-    {% else %}
-        <span class="pagination-btn next-btn disabled">Next</span>
+        <a href="?q={{ query }}&type={{ search_type }}&{% if param_name %}{{ param_name }}{% else %}page{% endif %}={{ page_obj.next_page_number }}" class="pagination-btn">Next &raquo;</a>
     {% endif %}
 </div>
+{% endif %}
 {% endif %}

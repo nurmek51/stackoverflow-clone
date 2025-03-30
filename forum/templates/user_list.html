@@ -36,8 +36,12 @@
                     {% endif %}
                 </div>
                 <div class="user-name-rep">
-<a href="{% url 'forum:profile' user_profile.pk %}">
-                    <div class="user-reputation"><i class="fas fa-award"></i> {{ user_profile.profile.reputation }}</div>
+                    <a href="{% url 'forum:profile' user_profile.pk %}">
+                        <span class="user-name">{{ user_profile.username }}</span>
+                    </a>
+                    <div class="user-reputation">
+                        <i class="fas fa-award"></i> {{ user_profile.profile.reputation }}
+                    </div>
                 </div>
             </div>
             <div class="user-card-body">
@@ -66,6 +70,7 @@
         <div class="no-results">No users found.</div>
     {% endfor %}
 </div>
+
 
 {% include 'includes/pagination.html' with page_obj=users %}
 {% endblock %}

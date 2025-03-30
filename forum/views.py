@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
 from django.contrib.auth import views as auth_views
 from django.contrib.contenttypes.models import ContentType
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import models
 from django.db.models import Sum, Q, Count
 from django.http import JsonResponse, HttpResponse
@@ -570,19 +571,23 @@ class TagDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 class SearchView(TemplateView):
     template_name = 'search_results.html'
-    paginate_by = 10  # Number of items per page
+    paginate_by = 10
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get('q', '').strip()
         search_type = self.request.GET.get('type', 'all')
-        page = self.request.GET.get('page', 1)
+
+        # Get the page numbers for each content type
+        questions_page = self.request.GET.get('questions_page', 1)
+        answers_page = self.request.GET.get('answers_page', 1)
+        users_page = self.request.GET.get('users_page', 1)
+        tags_page = self.request.GET.get('tags_page', 1)
 
         context['query'] = query
         context['search_type'] = search_type
 
         if query:
-            # Define your queries
             questions = Question.objects.filter(
                 Q(title__icontains=query) | Q(body__icontains=query)
             ).order_by('-created_at')
@@ -596,20 +601,19 @@ class SearchView(TemplateView):
             ).order_by('-date_joined')
 
             tags = Tag.objects.filter(
-                Q(name__icontains=query) | Q(description__icontains=query)
+                name__icontains=query
             ).annotate(count=Count('questions')).order_by('-count')
 
-            # Store counts before pagination
             context['questions_count'] = questions.count() if search_type in ['all', 'questions'] else 0
             context['answers_count'] = answers.count() if search_type in ['all', 'answers'] else 0
             context['users_count'] = users.count() if search_type in ['all', 'users'] else 0
             context['tags_count'] = tags.count() if search_type in ['all', 'tags'] else 0
 
-            # Apply pagination based on the search type
-            if search_type == 'questions' or search_type == 'all':
+            # Paginate each queryset based on search_type
+            if search_type in ['questions', 'all']:
                 paginator = Paginator(questions, self.paginate_by)
                 try:
-                    context['questions'] = paginator.page(page)
+                    context['questions'] = paginator.page(questions_page)
                 except PageNotAnInteger:
                     context['questions'] = paginator.page(1)
                 except EmptyPage:
@@ -617,10 +621,10 @@ class SearchView(TemplateView):
             else:
                 context['questions'] = []
 
-            if search_type == 'answers' or search_type == 'all':
+            if search_type in ['answers', 'all']:
                 paginator = Paginator(answers, self.paginate_by)
                 try:
-                    context['answers'] = paginator.page(page)
+                    context['answers'] = paginator.page(answers_page)
                 except PageNotAnInteger:
                     context['answers'] = paginator.page(1)
                 except EmptyPage:
@@ -628,10 +632,10 @@ class SearchView(TemplateView):
             else:
                 context['answers'] = []
 
-            if search_type == 'users' or search_type == 'all':
+            if search_type in ['users', 'all']:
                 paginator = Paginator(users, self.paginate_by)
                 try:
-                    context['users'] = paginator.page(page)
+                    context['users'] = paginator.page(users_page)
                 except PageNotAnInteger:
                     context['users'] = paginator.page(1)
                 except EmptyPage:
@@ -639,10 +643,10 @@ class SearchView(TemplateView):
             else:
                 context['users'] = []
 
-            if search_type == 'tags' or search_type == 'all':
+            if search_type in ['tags', 'all']:
                 paginator = Paginator(tags, self.paginate_by)
                 try:
-                    context['tags'] = paginator.page(page)
+                    context['tags'] = paginator.page(tags_page)
                 except PageNotAnInteger:
                     context['tags'] = paginator.page(1)
                 except EmptyPage:
@@ -650,7 +654,6 @@ class SearchView(TemplateView):
             else:
                 context['tags'] = []
         else:
-            # No query provided
             context['questions'] = []
             context['answers'] = []
             context['users'] = []
