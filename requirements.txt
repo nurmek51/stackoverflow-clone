@@ -42,3 +42,5 @@ djangorestframework-simplejwt==5.5.0
 
 # for .env
 python-dotenv==1.1.0
+
+django-markdown-deux==2.5.3
