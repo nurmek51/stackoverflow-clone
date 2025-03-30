@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'forum',
 ]
 
+CSRF_TRUSTED_ORIGINS = ['https://stackoverflow-clone-production-4ddc.up.railway.app']
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
