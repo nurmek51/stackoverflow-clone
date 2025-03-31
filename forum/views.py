@@ -14,6 +14,8 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views.generic.edit import FormView
+from django.views.decorators.http import require_POST
+from django.utils.decorators import method_decorator
 from django import forms
 
 from rest_framework import generics
@@ -101,28 +103,84 @@ class MainPageView(ListView):
             question.has_accepted_answer = question.answers.filter(is_accepted=True).exists()
         return context
 
+
 class QuestionVoteView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        question = get_object_or_404(Question, pk=pk)
-        vote_type = request.POST.get('vote_type')
-        vote_value = 1 if vote_type == 'upvote' else -1 if vote_type == 'downvote' else 0
-        content_type = ContentType.objects.get_for_model(question)
-        vote, created = Vote.objects.get_or_create(
-            user=request.user,
-            content_type=content_type,
-            object_id=question.pk,
-            defaults={'vote': vote_value}
-        )
-        if not created:
-            vote.vote = vote_value
-            vote.save()
-        votes_total = Vote.objects.filter(content_type=content_type, object_id=question.pk).aggregate(total=Sum('vote'))['total'] or 0
-        question.score = votes_total
-        question.save()
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'votes_count': question.score, 'user_vote': vote_type})
-        return redirect('forum:question_detail', pk=question.pk, slug=question.slug)
+        try:
+            question = get_object_or_404(Question, pk=pk)
 
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                vote_type = data.get('vote_type')
+            else:
+                vote_type = request.POST.get('vote_type')
+
+            vote_value = 1 if vote_type == 'upvote' else -1 if vote_type == 'downvote' else 0
+            content_type = ContentType.objects.get_for_model(question)
+
+            if question.author == request.user:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'error': 'You cannot vote on your own content'}, status=400)
+                return redirect('forum:question_detail', pk=question.pk, slug=question.slug)
+
+            vote, created = Vote.objects.get_or_create(
+                user=request.user,
+                content_type=content_type,
+                object_id=question.pk,
+                defaults={'vote': vote_value}
+            )
+
+            if not created:
+                old_vote = vote.vote
+
+                if (vote_type == 'upvote' and old_vote == 1) or (vote_type == 'downvote' and old_vote == -1):
+                    vote_value = 0
+
+                vote.vote = vote_value
+                vote.save()
+
+                if old_vote != vote_value:
+                    if old_vote == 1:
+                        question.author.profile.reputation -= 5
+                    elif old_vote == -1:
+                        question.author.profile.reputation += 2
+
+                    if vote_value == 1:
+                        question.author.profile.reputation += 5
+                    elif vote_value == -1:
+                        question.author.profile.reputation -= 2
+
+                    question.author.profile.save()
+            else:
+                if vote_value == 1:
+                    question.author.profile.reputation += 5
+                elif vote_value == -1:
+                    question.author.profile.reputation -= 2
+
+                question.author.profile.save()
+
+            votes_total = \
+            Vote.objects.filter(content_type=content_type, object_id=question.pk).aggregate(total=Sum('vote'))[
+                'total'] or 0
+            question.score = votes_total
+            question.save()
+
+            user_vote = 'upvote' if vote.vote == 1 else 'downvote' if vote.vote == -1 else 'none'
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'votes_count': question.score,
+                    'user_vote': user_vote,
+                    'reputation': question.author.profile.reputation
+                })
+            return redirect('forum:question_detail', pk=question.pk, slug=question.slug)
+
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'error': str(e)}, status=500)
+            return redirect('forum:question_detail', pk=question.pk, slug=question.slug)
 class QuestionListView(ListView):
     model = Question
     template_name = 'question_list.html'
@@ -158,18 +216,22 @@ class QuestionListView(ListView):
             question.has_accepted_answer = question.answers.filter(is_accepted=True).exists()
         return context
 
+@method_decorator(require_POST, name='dispatch')
 class BookmarkQuestionView(LoginRequiredMixin, View):
-    http_method_names = ['post']
     def post(self, request, pk):
         question = get_object_or_404(Question, pk=pk)
         bookmark, created = Bookmark.objects.get_or_create(user=request.user, question=question)
+
         if not created:
             bookmark.delete()
             is_bookmarked = False
         else:
             is_bookmarked = True
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            print(f"AJAX request received, returning is_bookmarked={is_bookmarked}")
             return JsonResponse({'is_bookmarked': is_bookmarked})
+
         return redirect('forum:question_detail', pk=question.pk, slug=question.slug)
 
 class QuestionDetailView(DetailView):
@@ -310,37 +372,109 @@ class AnswerDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def get_success_url(self):
         return reverse('question-detail', kwargs={'pk': self.object.question.id})
 
+
 class AnswerVoteView(LoginRequiredMixin, View):
     def post(self, request, pk):
-        answer = get_object_or_404(Answer, pk=pk)
-        vote_type = request.POST.get('vote_type')
-        vote_value = 1 if vote_type == 'upvote' else -1 if vote_type == 'downvote' else 0
-        content_type = ContentType.objects.get_for_model(answer)
-        vote, created = Vote.objects.get_or_create(
-            user=request.user,
-            content_type=content_type,
-            object_id=answer.pk,
-            defaults={'vote': vote_value}
-        )
-        if not created:
-            vote.vote = vote_value
-            vote.save()
-        votes_total = Vote.objects.filter(content_type=content_type, object_id=answer.pk).aggregate(total=Sum('vote'))['total'] or 0
-        answer.score = votes_total
-        answer.save()
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'votes_count': answer.score, 'user_vote': vote_type})
-        return redirect('forum:question_detail', pk=answer.question.pk, slug=answer.question.slug)
+        try:
+            answer = get_object_or_404(Answer, pk=pk)
+
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                vote_type = data.get('vote_type')
+            else:
+                vote_type = request.POST.get('vote_type')
+
+            vote_value = 1 if vote_type == 'upvote' else -1 if vote_type == 'downvote' else 0
+            content_type = ContentType.objects.get_for_model(answer)
+
+            if answer.author == request.user:
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'error': 'You cannot vote on your own content'}, status=400)
+                return redirect('forum:question_detail', pk=answer.question.pk, slug=answer.question.slug)
+
+            vote, created = Vote.objects.get_or_create(
+                user=request.user,
+                content_type=content_type,
+                object_id=answer.pk,
+                defaults={'vote': vote_value}
+            )
+
+            if not created:
+                old_vote = vote.vote
+
+                if (vote_type == 'upvote' and old_vote == 1) or (vote_type == 'downvote' and old_vote == -1):
+                    vote_value = 0
+
+                vote.vote = vote_value
+                vote.save()
+
+                if old_vote != vote_value:
+                    if old_vote == 1:
+                        answer.author.profile.reputation -= 10
+                    elif old_vote == -1:
+                        answer.author.profile.reputation += 2
+
+                    if vote_value == 1:
+                        answer.author.profile.reputation += 10
+                    elif vote_value == -1:
+                        answer.author.profile.reputation -= 2
+
+                    answer.author.profile.save()
+            else:
+                if vote_value == 1:
+                    answer.author.profile.reputation += 10
+                elif vote_value == -1:
+                    answer.author.profile.reputation -= 2
+
+                answer.author.profile.save()
+
+            votes_total = \
+            Vote.objects.filter(content_type=content_type, object_id=answer.pk).aggregate(total=Sum('vote'))[
+                'total'] or 0
+            answer.score = votes_total
+            answer.save()
+
+            user_vote = 'upvote' if vote.vote == 1 else 'downvote' if vote.vote == -1 else 'none'
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'votes_count': answer.score,
+                    'user_vote': user_vote,
+                    'reputation': answer.author.profile.reputation
+                })
+            return redirect('forum:question_detail', pk=answer.question.pk, slug=answer.question.slug)
+
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'error': str(e)}, status=500)
+            return redirect('forum:question_detail', pk=answer.question.pk, slug=answer.question.slug)
+
 
 class AcceptAnswerView(LoginRequiredMixin, View):
     def post(self, request, pk):
         answer = get_object_or_404(Answer, pk=pk)
         question = answer.question
+
         if request.user == question.author:
+            previously_accepted = question.answers.filter(is_accepted=True).first()
+
             question.answers.update(is_accepted=False)
+
+            if previously_accepted and previously_accepted != answer:
+                previously_accepted.author.profile.reputation -= 15
+                previously_accepted.author.profile.save()
+
             answer.is_accepted = True
             answer.save()
+
+            if not previously_accepted or previously_accepted != answer:
+                answer.author.profile.reputation += 15
+                answer.author.profile.save()
+
         return redirect('forum:question_detail', pk=question.pk, slug=question.slug)
+
 
 class VoteCreateView(LoginRequiredMixin, CreateView):
     model = Vote
@@ -351,8 +485,27 @@ class VoteCreateView(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         content_type_id = self.kwargs.get('content_type_id')
         object_id = self.kwargs.get('object_id')
-        form.instance.content_type = get_object_or_404(ContentType, id=content_type_id)
+        content_type = get_object_or_404(ContentType, id=content_type_id)
+        form.instance.content_type = content_type
         form.instance.object_id = object_id
+
+
+        target_object = content_type.get_object_for_this_type(pk=object_id)
+
+        if hasattr(target_object, 'author') and target_object.author == self.request.user:
+            return HttpResponseBadRequest("You cannot vote on your own content")
+
+        if hasattr(target_object, 'author'):
+            if form.instance.vote == 1:
+                if content_type.model == 'question':
+                    target_object.author.profile.reputation += 5
+                elif content_type.model == 'answer':
+                    target_object.author.profile.reputation += 10
+            elif form.instance.vote == -1:
+                target_object.author.profile.reputation -= 2
+
+            target_object.author.profile.save()
+
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -578,7 +731,6 @@ class SearchView(TemplateView):
         query = self.request.GET.get('q', '').strip()
         search_type = self.request.GET.get('type', 'all')
 
-        # Get the page numbers for each content type
         questions_page = self.request.GET.get('questions_page', 1)
         answers_page = self.request.GET.get('answers_page', 1)
         users_page = self.request.GET.get('users_page', 1)
@@ -609,7 +761,6 @@ class SearchView(TemplateView):
             context['users_count'] = users.count() if search_type in ['all', 'users'] else 0
             context['tags_count'] = tags.count() if search_type in ['all', 'tags'] else 0
 
-            # Paginate each queryset based on search_type
             if search_type in ['questions', 'all']:
                 paginator = Paginator(questions, self.paginate_by)
                 try:
