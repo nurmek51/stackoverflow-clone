@@ -57,20 +57,6 @@
             </button>
         </form>
 
-<!--        <div class="award-badge">-->
-<!--    {% if user.is_authenticated %}-->
-<!--<form action="{% url 'forum:award_badge' question.pk %}" method="post" class="award-badge-form">        {% csrf_token %}-->
-<!--        <select name="badge_id" id="badge-select">-->
-<!--            <option value="">Select badge</option>-->
-<!--            {% for badge in all_badges %}-->
-<!--                <option value="{{ badge.pk }}">{{ badge.name }}</option>-->
-<!--            {% endfor %}-->
-<!--        </select>-->
-<!--        <button type="submit" class="btn btn-secondary">Award Badge</button>-->
-<!--    </form>-->
-<!--    {% endif %}-->
-<!--</div>-->
-
        <form action="{% url 'forum:bookmark_question' question.pk %}" method="post" class="bookmark-form">
     {% csrf_token %}
     <button type="submit" class="post-menu-btn bookmark {% if is_bookmarked %}bookmarked{% endif %}" title="Bookmark this question">
@@ -205,24 +191,33 @@
 {% endblock %}
 
 {% block extra_js %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded - script running");
+
+    // Bookmark functionality
     document.querySelectorAll('.bookmark-form').forEach(form => {
         form.addEventListener('submit', function(e) {
+            console.log("Bookmark form submitted!");
             e.preventDefault();
-            const formData = new FormData(this);
+
+            const csrfToken = this.querySelector('[name=csrfmiddlewaretoken]').value;
+
             fetch(this.action, {
                 method: 'POST',
-                body: formData,
                 headers: {
-                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
             })
             .then(response => response.json())
             .then(data => {
+                console.log("Bookmark response data:", data);
                 const bookmarkBtn = this.querySelector('.post-menu-btn');
                 const bookmarkIcon = bookmarkBtn.querySelector('i');
+
                 if (data.is_bookmarked) {
                     bookmarkBtn.classList.add('bookmarked');
                     bookmarkIcon.classList.replace('far', 'fas');
@@ -231,16 +226,82 @@
                     bookmarkIcon.classList.replace('fas', 'far');
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Bookmark error:', error);
+            });
+        });
+    });
+
+    // Vote functionality - using vanilla JS (no jQuery)
+   document.querySelectorAll('.vote-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        console.log("Vote form submitted!");
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const voteType = this.querySelector('input[name="vote_type"]').value;
+        console.log("Vote type:", voteType);
+
+        const csrfToken = this.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            console.log("Vote response status:", response.status);
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Unknown error occurred');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log("Vote response data:", data);
+            const voteCell = this.closest('.vote-cell');
+            voteCell.querySelector('.vote-count').textContent = data.votes_count;
+
+            // Update vote button states
+            const upvoteBtn = voteCell.querySelector('.upvote');
+            const downvoteBtn = voteCell.querySelector('.downvote');
+
+            // Clear all voted states first
+            upvoteBtn.classList.remove('voted');
+            downvoteBtn.classList.remove('voted');
+
+            // Apply voted class based on user's current vote
+            if (data.user_vote === 'upvote') {
+                upvoteBtn.classList.add('voted');
+            } else if (data.user_vote === 'downvote') {
+                downvoteBtn.classList.add('voted');
+            }
+
+            // Update reputation if available in the response
+            if (data.reputation !== undefined) {
+                const authorInfo = this.closest('.post-layout').querySelector('.author-reputation');
+                if (authorInfo) {
+                    authorInfo.textContent = data.reputation;
+                }
+            }
+        })
+        .catch(error => {
+            console.error("Vote error:", error);
+            alert(error.message || "There was an error processing your vote.");
         });
     });
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.vote-form').forEach(form => {
+    // Award badge functionality
+    document.querySelectorAll('.award-badge-form').forEach(form => {
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
+
             fetch(this.action, {
                 method: 'POST',
                 body: formData,
@@ -251,56 +312,17 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                const voteCell = this.closest('.vote-cell');
-                voteCell.querySelector('.vote-count').textContent = data.votes_count;
-                const upvoteBtn = voteCell.querySelector('.upvote');
-                const downvoteBtn = voteCell.querySelector('.downvote');
-                if (data.user_vote === 'upvote') {
-                    upvoteBtn.classList.add('voted');
-                    downvoteBtn.classList.remove('voted');
-                } else if (data.user_vote === 'downvote') {
-                    upvoteBtn.classList.remove('voted');
-                    downvoteBtn.classList.add('voted');
+                if (data.awarded) {
+                    alert('Badge awarded!');
                 } else {
-                    upvoteBtn.classList.remove('voted');
-                    downvoteBtn.classList.remove('voted');
+                    alert('Badge removed!');
                 }
             })
             .catch(error => console.error('Error:', error));
         });
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-  document.addEventListener('DOMContentLoaded', function() {
-  document.querySelectorAll('.award-badge-form').forEach(form => {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const formData = new FormData(this);
-
-      // Use the form's action attribute directly without modification
-      fetch(this.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
-          'X-Requested-With': 'XMLHttpRequest'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.awarded) {
-          alert('Badge awarded!');
-        } else {
-          alert('Badge removed!');
-        }
-      })
-      .catch(error => console.error('Error:', error));
-    });
-  });
-});
-
-
+    // Markdown editor toolbar functionality
     document.querySelectorAll('.toolbar-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             const editor = document.getElementById('answer-editor');
@@ -309,6 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectionEnd = editor.selectionEnd;
             const selectedText = editor.value.substring(selectionStart, selectionEnd);
             let replacement = '';
+
             if (tag === '`' && selectedText.includes('\n')) {
                 replacement = '```\n' + selectedText + '\n```';
             } else if (tag === '> ') {
@@ -320,10 +343,12 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 replacement = tag + selectedText + tag;
             }
+
             editor.focus();
             const startPos = editor.selectionStart;
             const endPos = editor.selectionEnd;
             editor.value = editor.value.substring(0, startPos) + replacement + editor.value.substring(endPos);
+
             if (tag === '[](url)' && !selectedText) {
                 editor.selectionStart = startPos + 1;
                 editor.selectionEnd = startPos + 9;
