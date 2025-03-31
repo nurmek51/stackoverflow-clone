@@ -21,8 +21,11 @@
 <div class="content-header">
     <h1>Top Questions</h1>
     <div class="content-actions">
-        <a href="{% url 'forum:question_create' %}" class="btn btn-primary">Ask Question</a>
-    </div>
+{% if user.is_authenticated %}
+  <a href="{% url 'forum:question_create' %}" class="btn btn-primary">Ask Question</a>
+{% else %}
+  <a href="{% url 'forum:login' %}?next={% url 'forum:question_create' %}" class="btn btn-primary">Ask Question</a>
+{% endif %}    </div>
 </div>
 
 <div class="questions-filter">
