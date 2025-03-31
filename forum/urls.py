@@ -18,10 +18,10 @@ from django.contrib.auth.views import LogoutView
 app_name = 'forum'
 
 urlpatterns = [
+    path('', MainPageView.as_view(), name='index'),
     path('terms/', Privacy.as_view(), name='terms'),
     path('privacy/', Terms.as_view(), name='privacy'),
     path('guideline/', GuidelineView.as_view(), name='guidelines'),
-    path('', MainPageView.as_view(), name='index'),
     path('users/', UserListView.as_view(), name='user_list'),
     path('search/', SearchView.as_view(), name='search'),
 
@@ -32,12 +32,12 @@ urlpatterns = [
 
     # Вопросы
     path('questions/', QuestionListView.as_view(), name='question_list'),
-    path('questions/<int:pk>/<slug:slug>/', QuestionDetailView.as_view(), name='question_detail'),
+    path('questions/<int:pk>/bookmark/', BookmarkQuestionView.as_view(), name='bookmark_question'),
     path('questions/create/', QuestionCreateView.as_view(), name='question_create'),
     path('questions/<int:pk>/update/', QuestionUpdateView.as_view(), name='question_update'),
     path('questions/<int:pk>/delete/', QuestionDeleteView.as_view(), name='question_delete'),
-    path('questions/<int:pk>/bookmark/', BookmarkQuestionView.as_view(), name='bookmark_question'),
     path('questions/<int:pk>/vote/', QuestionVoteView.as_view(), name='question_vote'),
+    path('questions/<int:pk>/<slug:slug>/', QuestionDetailView.as_view(), name='question_detail'),
 
     # Ответы
     path('questions/<int:question_id>/answers/create/', AnswerCreateView.as_view(), name='answer_create'),
